@@ -1,49 +1,87 @@
-import java.net.*;
-import java.io.*;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.Scanner;
 
 public class UDPClient {
-
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         DatagramSocket aSocket = null;
+        Scanner input = new Scanner(System.in);
 
         try {
             aSocket = new DatagramSocket();
-            Scanner input = new Scanner(System.in);
-            String mensagem = null;
-            int id = 0;
+            aSocket.setSoTimeout(3000);
 
-            while(true){
-                System.out.print("Sua Mensagem :");
-                mensagem = input.nextLine().toLowerCase();
-                if(mensagem.equals("sair")){
-                    return;
+            InetAddress aHost = InetAddress.getByName("localhost");
+            int serverPort = 6789;
+
+            System.out.println("Escolha o modo de numeração: ");
+            System.out.println("1 - Automático");
+            System.out.println("2 - Manual");
+            System.out.println("Opção: ");
+            int modo = Integer.parseInt(input.nextLine().trim());
+
+            int autoSeq = 1;
+
+            while (true) {
+                System.out.println("Mensagem (ou 'sair'): ");
+                String msg = input.nextLine();
+
+                if (msg.equalsIgnoreCase("sair")) {
+                    break;
                 }
-                byte[] m = mensagem.getBytes();
-                id ++;
-                byte[] MensagemComID = new byte[1 + mensagem.length()]; // Armazenar o ID
-                InetAddress aHost = InetAddress.getByName("localhost");
-                int serverPort = 6789;
 
-                MensagemComID[0] = (byte)id; // converte o ID da mensagem para bytes para ser enviada para o servidor
+                int seqNum;
+                if (modo == 2) {
+                    System.out.println("Indique o número de sequência (N): ");
+                    seqNum = Integer.parseInt(input.nextLine().trim());
+                } else {
+                    seqNum = autoSeq++;
+                }
 
-                System.arraycopy(m, 0, MensagemComID, 1, m.length); // associa o id à mensagem
+                String payload = seqNum + ',' + msg;
+                byte[] sendBuffer = payload.getBytes();
 
-
-                DatagramPacket request = new DatagramPacket(MensagemComID,MensagemComID.length,aHost,serverPort);
-
+                DatagramPacket request = new DatagramPacket(
+                        sendBuffer,
+                        sendBuffer.length,
+                        aHost,
+                        serverPort);
                 aSocket.send(request);
 
-                byte[] buffer = new byte[1000];
+                // Receção
 
-                DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
+                byte[] recvBuffer = new byte[1000];
+                DatagramPacket reply = new DatagramPacket(recvBuffer, recvBuffer.length);
 
-                aSocket.receive(reply);
+                try {
+                    aSocket.receive(reply);
 
-                System.out.println("Reply: " + new String(reply.getData()));
+                    String resposta = new String(reply.getData(), 0, reply.getLength());
+
+                    if (resposta.startsWith("waitingfor,")) {
+                        String[] partes = resposta.split(",");
+                        String esperado = partes.length > 1 ? partes[1] : "?";
+                        System.err.println("[AVISO] Mensagem fora de ordem! Servidor à espera do ID: " + esperado);
+                    } else {
+                        System.out.println("[ECHO OK] " + resposta);
+                    }
+                } catch (SocketTimeoutException e) {
+                    System.err.println("[ERRO] Timeout: Nenhuma resposta recebida do servidor.");
+                }
             }
-        } catch (SocketException e) { System.out.println("Socket: " + e.getMessage());
-        } catch (IOException e)     { System.out.println("IO: " + e.getMessage());
-        } finally { if (aSocket != null) aSocket.close(); }
+        } catch (SocketException e) {
+            System.err.println("Socket: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("IO: " + e.getMessage());
+        } finally {
+            if (aSocket != null) {
+                aSocket.close();
+            }
+            input.close();
+        }
     }
 }
