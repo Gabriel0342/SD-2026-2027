@@ -1,87 +1,83 @@
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
+import java.net.*;
+import java.io.*;
 import java.util.Scanner;
 
+
 public class UDPClient {
-    public static void main(String[] args) {
+
+    public static void main(String args[]) {
         DatagramSocket aSocket = null;
         Scanner input = new Scanner(System.in);
+        String mensagem = null;
+        int opcao,idMensagem = 0;
+
+        System.out.println("Quer que a introdução do ID seja :\n 1 - Automática\n 2 - Manual\n:");
+        opcao = input.nextInt();
+        input.nextLine(); // Limpar Buffer
+
+        switch (opcao){
+            case 1 : System.out.println("<Mensagem>"); break;
+            case 2 : System.out.println("<ID>,<Mensagem>");break;
+        }
 
         try {
-            aSocket = new DatagramSocket();
-            aSocket.setSoTimeout(3000);
-
-            InetAddress aHost = InetAddress.getByName("localhost");
-            int serverPort = 6789;
-
-            System.out.println("Escolha o modo de numeração: ");
-            System.out.println("1 - Automático");
-            System.out.println("2 - Manual");
-            System.out.println("Opção: ");
-            int modo = Integer.parseInt(input.nextLine().trim());
-
-            int autoSeq = 1;
-
             while (true) {
-                System.out.println("Mensagem (ou 'sair'): ");
-                String msg = input.nextLine();
+                idMensagem ++;
 
-                if (msg.equalsIgnoreCase("sair")) {
-                    break;
+                byte[] m;
+                InetAddress aHost = InetAddress.getByName("localhost");
+                int serverPort = 6789;
+                DatagramPacket request = null;
+
+
+                switch (opcao){
+                    case 1 :
+                        aSocket = new DatagramSocket();
+
+                        System.out.print("Mensagem : ");
+                        mensagem = input.nextLine().toLowerCase();
+
+                        if (mensagem.equals("sair")) {
+                            return;
+                        }
+
+                        m = mensagem.getBytes();
+
+                        byte[] MensagemComID = new byte[1 + mensagem.length()];
+                        MensagemComID[0] = (byte) idMensagem; // converte o ID da mensagem para bytes para ser enviada para o servidor
+                        //System.arraycopy(m, 0, MensagemComID, 1, m.length); // associa o id à mensagem
+
+                        String mensagemEnviar = (MensagemComID[0] & 0xFF) + "," + mensagem;
+
+                        request = new DatagramPacket(mensagemEnviar.getBytes(),mensagemEnviar.length(),aHost,serverPort);
+                        break;
+                    case 2 :
+                        aSocket = new DatagramSocket();
+
+                        System.out.print("Mensagem : ");
+                        mensagem = input.nextLine().toLowerCase();
+
+                        m = mensagem.getBytes();
+                        request = new DatagramPacket(m, m.length, aHost, serverPort);
+
+
+                        if (mensagem.equals("sair")) {
+                            return;
+                        }
+                        break;
                 }
 
-                int seqNum;
-                if (modo == 2) {
-                    System.out.println("Indique o número de sequência (N): ");
-                    seqNum = Integer.parseInt(input.nextLine().trim());
-                } else {
-                    seqNum = autoSeq++;
-                }
-
-                String payload = seqNum + ',' + msg;
-                byte[] sendBuffer = payload.getBytes();
-
-                DatagramPacket request = new DatagramPacket(
-                        sendBuffer,
-                        sendBuffer.length,
-                        aHost,
-                        serverPort);
                 aSocket.send(request);
 
-                // Receção
+                byte[] buffer = new byte[1000];
 
-                byte[] recvBuffer = new byte[1000];
-                DatagramPacket reply = new DatagramPacket(recvBuffer, recvBuffer.length);
+                DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
 
-                try {
-                    aSocket.receive(reply);
-
-                    String resposta = new String(reply.getData(), 0, reply.getLength());
-
-                    if (resposta.startsWith("waitingfor,")) {
-                        String[] partes = resposta.split(",");
-                        String esperado = partes.length > 1 ? partes[1] : "?";
-                        System.err.println("[AVISO] Mensagem fora de ordem! Servidor à espera do ID: " + esperado);
-                    } else {
-                        System.out.println("[ECHO OK] " + resposta);
-                    }
-                } catch (SocketTimeoutException e) {
-                    System.err.println("[ERRO] Timeout: Nenhuma resposta recebida do servidor.");
-                }
+                aSocket.receive(reply);
             }
-        } catch (SocketException e) {
-            System.err.println("Socket: " + e.getMessage());
-        } catch (IOException e) {
-            System.err.println("IO: " + e.getMessage());
-        } finally {
-            if (aSocket != null) {
-                aSocket.close();
-            }
-            input.close();
-        }
+
+        } catch (SocketException e) { System.out.println("Socket: " + e.getMessage());
+        } catch (IOException e)     { System.out.println("IO: " + e.getMessage());
+        } finally { if (aSocket != null) aSocket.close(); }
     }
 }

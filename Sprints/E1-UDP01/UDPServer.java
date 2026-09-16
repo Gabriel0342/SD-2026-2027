@@ -16,20 +16,17 @@ public class UDPServer {
                 i++;
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 aSocket.receive(request);
+                String mensagem = new String(request.getData(), 0, request.getLength(), StandardCharsets.UTF_8);
+                String[] id = mensagem.split(",");
 
-                byte[] mensagemRecebida = request.getData();
-                int idRecebido = mensagemRecebida[0] & 0xFF;
-                String mensagem = new String(mensagemRecebida, 1, request.getLength() - 1, StandardCharsets.UTF_8);
-
-                if(i != idRecebido){
-                    System.out.println("Falta a mensagem com o ID : " + i);
+                if(Integer.parseInt(id[0]) == i){
+                    System.out.println("ID : " + id[0] +" | Mensagem Recebida : " + id[1]);
+                }else{
+                    System.out.println("Falta a mensagem com id : " + i);
                     i--;
-                }else {
-                    System.out.println(idRecebido + " - " +mensagem);
                 }
 
-                DatagramPacket reply = new DatagramPacket(request.getData(),
-                        request.getLength(), request.getAddress(), request.getPort());
+                DatagramPacket reply = new DatagramPacket(request.getData(), request.getLength(), request.getAddress(), request.getPort());
 
                 aSocket.send(reply);
             }
