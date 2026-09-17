@@ -74,8 +74,8 @@ public class UDPClient {
                 DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
 
                 aSocket.receive(reply);
+                System.out.println(new String(reply.getData(), 0, reply.getLength()));
             }
-
         } catch (SocketException e) { System.out.println("Socket: " + e.getMessage());
         } catch (IOException e)     { System.out.println("IO: " + e.getMessage());
         } finally { if (aSocket != null) aSocket.close(); }
