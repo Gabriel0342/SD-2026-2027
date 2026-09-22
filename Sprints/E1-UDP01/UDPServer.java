@@ -4,8 +4,10 @@ import java.nio.charset.StandardCharsets;
 
 public class UDPServer {
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws IOException {
         DatagramSocket aSocket = null;
+        DatagramPacket request = null;
+        DatagramPacket reply;
 
         try {
             aSocket = new DatagramSocket(6789);
@@ -13,23 +15,38 @@ public class UDPServer {
             int i = 0;
 
             while (true) {
-                i++;
-                DatagramPacket request = new DatagramPacket(buffer, buffer.length);
-                DatagramPacket reply;
-                aSocket.receive(request);
-                String mensagem = new String(request.getData(), 0, request.getLength(), StandardCharsets.UTF_8);
-                String[] id = mensagem.split(",");
+                try {
+                    i++;
+                    request = new DatagramPacket(buffer, buffer.length); // Garante que a informação que chega não seja maior que 1000 bytes
+                    aSocket.receive(request);
+                    String mensagem = new String(request.getData(), 0, request.getLength(), StandardCharsets.UTF_8); // offeset garante que começamos a ler a mensagem no seu inicio
+                    String[] id = mensagem.split(",");
 
-                if(Integer.parseInt(id[0]) == i){
-                    System.out.println("ID : " + id[0] +" | Mensagem Recebida : " + id[1]);
-                    reply = new DatagramPacket(request.getData(), request.getLength(), request.getAddress(), request.getPort());
-                }else{
-                    String MensagemErro = "Falta a mensagem com ID : " + i;
-                    reply = new DatagramPacket(MensagemErro.getBytes(), MensagemErro.getBytes().length, request.getAddress(), request.getPort());
+                    if (id.length < 2) {
+                        String MensagemErro = "Mensagem inválida, verique o formato que foi introduzido.";
+                        reply = new DatagramPacket(MensagemErro.getBytes(), MensagemErro.getBytes().length, request.getAddress(), request.getPort());
+                        aSocket.send(reply);
+                        i--;
+                    } else {
+
+                        if (Integer.parseInt(id[0]) == i) {
+                            System.out.println("ID : " + id[0] + " | Mensagem Recebida : " + id[1]);
+                            reply = new DatagramPacket(request.getData(), request.getLength(), request.getAddress(), request.getPort());
+                        } else {
+                            String MensagemErro = "Falta a mensagem com ID : " + i;
+                            reply = new DatagramPacket(MensagemErro.getBytes(), MensagemErro.getBytes().length, request.getAddress(), request.getPort());
+                            i--;
+                        }
+
+                        aSocket.send(reply);
+                    }
+                }catch (NumberFormatException e) {
                     i--;
+                    String errorMsg = "Erro: ID da mensagem não é um número válido.";
+                    reply = new DatagramPacket(errorMsg.getBytes(), errorMsg.getBytes().length, request.getAddress(), request.getPort());
+                    aSocket.send(reply);
+                    continue;
                 }
-                
-                aSocket.send(reply);
             }
         } catch (SocketException e) { System.out.println("Socket: " + e.getMessage());
         } catch (IOException e)     { System.out.println("IO: " + e.getMessage());
