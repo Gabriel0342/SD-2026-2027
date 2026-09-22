@@ -33,7 +33,7 @@ public class UDPServer {
                             System.out.println("ID : " + id[0] + " | Mensagem Recebida : " + id[1]);
                             reply = new DatagramPacket(request.getData(), request.getLength(), request.getAddress(), request.getPort());
                         } else {
-                            String MensagemErro = "Falta a mensagem com ID : " + i;
+                            String MensagemErro = "waitingfor," + i;
                             reply = new DatagramPacket(MensagemErro.getBytes(), MensagemErro.getBytes().length, request.getAddress(), request.getPort());
                             i--;
                         }
@@ -42,8 +42,14 @@ public class UDPServer {
                     }
                 }catch (NumberFormatException e) {
                     i--;
-                    String errorMsg = "Erro: ID da mensagem não é um número válido.";
-                    reply = new DatagramPacket(errorMsg.getBytes(), errorMsg.getBytes().length, request.getAddress(), request.getPort());
+                    String erro = "Erro: ID da mensagem não é um número válido.";
+                    reply = new DatagramPacket(erro.getBytes(), erro.getBytes().length, request.getAddress(), request.getPort());
+                    aSocket.send(reply);
+                    continue;
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    i--;
+                    String MensagemErro = "Mensagem inválida, verifique o formato.";
+                    reply = new DatagramPacket(MensagemErro.getBytes(), MensagemErro.getBytes().length, request.getAddress(), request.getPort());
                     aSocket.send(reply);
                     continue;
                 }

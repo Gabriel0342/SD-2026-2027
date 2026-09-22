@@ -21,6 +21,7 @@ public class UDPClient {
         }
 
         try {
+            aSocket = new DatagramSocket();
             while (true) {
                 idMensagem ++;
 
@@ -32,8 +33,6 @@ public class UDPClient {
 
                 switch (opcao){
                     case 1 :
-                        aSocket = new DatagramSocket();
-
                         System.out.print("Mensagem : ");
                         mensagem = input.nextLine().toLowerCase();
 
@@ -43,17 +42,11 @@ public class UDPClient {
 
                         m = mensagem.getBytes();
 
-                        byte[] MensagemComID = new byte[1 + mensagem.length()];
-                        MensagemComID[0] = (byte) idMensagem; // converte o ID da mensagem para bytes para ser enviada para o servidor
-                        //System.arraycopy(m, 0, MensagemComID, 1, m.length); // associa o id à mensagem
-
-                        String mensagemEnviar = (MensagemComID[0] & 0xFF) + "," + mensagem;
+                        String mensagemEnviar = idMensagem + "," + mensagem;
 
                         request = new DatagramPacket(mensagemEnviar.getBytes(),mensagemEnviar.length(),aHost,serverPort);
                         break;
                     case 2 :
-                        aSocket = new DatagramSocket();
-
                         System.out.print("Mensagem : ");
                         mensagem = input.nextLine().toLowerCase();
 
@@ -74,7 +67,12 @@ public class UDPClient {
                 DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
 
                 aSocket.receive(reply);
-                System.out.println(new String(reply.getData(), 0, reply.getLength()));
+                String mensagemRecebida = new String(reply.getData(), 0, reply.getLength());
+                if (mensagemRecebida.startsWith("waitingfor")) {
+                    System.out.println("[ALERTA] Falta a mensagem " + mensagemRecebida.split(",")[1]);
+                }else {
+                    System.out.println(mensagemRecebida);
+                }
             }
         } catch (SocketException e) { System.out.println("Socket: " + e.getMessage());
         } catch (IOException e)     { System.out.println("IO: " + e.getMessage());
