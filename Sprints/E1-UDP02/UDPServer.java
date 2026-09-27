@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class UDPServer {
 
-    private static final List<String> receptionList = new ArrayList<>();
+    private static final List<String> receptionList = new ArrayList<>(); // Contains the delivered payload (ordered) up to L
     private static final Map<Integer, String> temporaryMessages = new HashMap<>();
 
     /**
@@ -18,18 +18,20 @@ public class UDPServer {
      */
     public static int processDeliveredMessages(int nLastMessageInOrder, int nCurrentMessage,
             String currentMessage) {
+        // Dups or old messages (we already have this ID)
         if (nCurrentMessage <= nLastMessageInOrder) {
             return nLastMessageInOrder;
         }
-
+        // Gap identified (at least 1 package misssing)
         if (nCurrentMessage > nLastMessageInOrder + 1) {
             temporaryMessages.putIfAbsent(nCurrentMessage, currentMessage);
             return nLastMessageInOrder;
         }
 
+        // At this point, nCurrentMessage == nLastMessageInOrder + 1 (the correct and expected package)
         int lastMessageInOrder = nCurrentMessage;
         receptionList.add(currentMessage);
-
+        // Add all subsequent packages that may have been received previously
         while (temporaryMessages.containsKey(lastMessageInOrder + 1)) {
             lastMessageInOrder++;
             receptionList.add(temporaryMessages.remove(lastMessageInOrder));
@@ -55,30 +57,32 @@ public class UDPServer {
 
             while (true) {
                 try {
-                    request = new DatagramPacket(buffer, buffer.length); // Garante que a informação que chega não seja
-                                                                         // maior que 1000 bytes
+                    request = new DatagramPacket(buffer, buffer.length); // Ensures the received info is not > 1000 bytes
                     aSocket.receive(request);
                     // offset garante que começamos a ler a mensagem no seu inicio
-                    String mensagem = new String(request.getData(), 0, request.getLength(), StandardCharsets.UTF_8);
-                    String[] id = mensagem.split(",", 2);
+                    String message = new String(request.getData(), 0, request.getLength(), StandardCharsets.UTF_8);
+                    String[] fields = message.split(",", 2); // fields[0] - ID, fields[1] - message string
 
-                    if (id.length < 2) {
+                    // Check if correct fields have been received
+                    if (fields.length < 2) {
                         String messageError = "Mensagem inválida, verifique o formato que foi introduzido.";
                         byte[] errorBytes = messageError.getBytes(StandardCharsets.UTF_8);
                         reply = new DatagramPacket(errorBytes, errorBytes.length,
                                 request.getAddress(), request.getPort());
                         aSocket.send(reply);
                     } else {
-                        int currentMessageNumber = Integer.parseInt(id[0]);
+                        int currentMessageNumber = Integer.parseInt(fields[0]);
                         int previousLastMessageInOrder = lastMessageInOrder;
                         int previousDeliveredCount = receptionList.size();
-                        lastMessageInOrder = processDeliveredMessages(lastMessageInOrder,
-                                currentMessageNumber, id[1]);
+                        // Get last message processed in order
+                        lastMessageInOrder = processDeliveredMessages(lastMessageInOrder, currentMessageNumber,
+                                fields[1]);
 
-                        System.out.println("Recebida = " + currentMessageNumber + "," + id[1]);
+                        System.out.println("Recebida = " + currentMessageNumber + "," + fields[1]);
                         System.out.println("Mensagens entregues neste passo = "
                                 + receptionList.subList(previousDeliveredCount, receptionList.size()));
 
+                        // If IDs are different, it means a new missing ID has come up, so we proceed
                         if (lastMessageInOrder != previousLastMessageInOrder) {
                             reply = new DatagramPacket(request.getData(), request.getLength(), request.getAddress(),
                                     request.getPort());
