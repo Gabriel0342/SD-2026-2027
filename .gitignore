@@ -1,3 +1,4 @@
 .clawdea/REPO_STATE.md
 out/
 *.class
+.vscode/
