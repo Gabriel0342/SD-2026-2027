@@ -9,9 +9,10 @@ public class TCPServer {
         try {
             int serverPort = 7896;
             ServerSocket listenSocket = new ServerSocket(serverPort);
+
             while (true) {
-                Socket clientSocket = listenSocket.accept();
-                new Connection(clientSocket);
+                Socket clientSocket = listenSocket.accept(); // Blocks until TCP connection is established
+                new Connection(clientSocket); // Dispatch the client to a new connection (thread)
             }
         } catch (IOException e) {
             System.out.println("Listen: " + e.getMessage());

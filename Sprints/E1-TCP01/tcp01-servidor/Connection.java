@@ -16,6 +16,7 @@ public class Connection extends Thread {
             this.clientSocket = clientSocket;
             in = new ObjectInputStream(clientSocket.getInputStream());
             out = new DataOutputStream(clientSocket.getOutputStream());
+
             start();
         } catch (IOException e) {
             System.out.println("Connection: " + e.getMessage());
@@ -25,7 +26,9 @@ public class Connection extends Thread {
     @Override
     public void run() {
         try {
+            // Read person
             Person person = (Person) in.readObject();
+            // Reply with person's info
             out.writeUTF(person.getPlace().getLocality());
             out.flush();
         } catch (ClassNotFoundException e) {
