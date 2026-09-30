@@ -6,9 +6,10 @@ import java.net.Socket;
 
 public class TCPServer {
     public static void main(String[] args) {
-        try {
-            int serverPort = 7896;
-            ServerSocket listenSocket = new ServerSocket(serverPort);
+        int serverPort = 7896;
+
+        try (ServerSocket listenSocket = new ServerSocket(serverPort)) {
+            System.out.println("Server started on port 7896.");
 
             while (true) {
                 Socket clientSocket = listenSocket.accept(); // Blocks until TCP connection is established
