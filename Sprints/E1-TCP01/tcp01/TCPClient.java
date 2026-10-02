@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -27,6 +28,9 @@ public class TCPClient {
             // Blocks waiting for the full string
             String data = in.readUTF();
             System.out.println("Received: " + data);
+        } catch (ConnectException e) {
+            // Happens if Server is not running
+            System.out.println("Couldn't connect: " + e.getMessage());
         } catch (UnknownHostException e) {
             System.out.println("Sock: " + e.getMessage());
         } catch (EOFException e) {
