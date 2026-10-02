@@ -28,15 +28,17 @@ public class Connection extends Thread {
     public void run() {
         try {
             // Read person
-            Person person = (Person) in.readObject();
+            Person person = (Person) in.readObject(); // this also compares UID
             // Reply with person's info
             out.writeUTF(person.getPlace().getLocality());
             out.flush();
         } catch (ClassNotFoundException e) {
+            // May happen if classes packages are different
             System.out.println("Class not found: " + e.getMessage());
         } catch (InvalidClassException e) {
             System.out.println("Class found but Version UID is incompatible: " + e.getMessage());
         } catch (EOFException e) {
+            // May happen if Serializable is removed from the client side
             System.out.println("EOF: " + e.getMessage());
         } catch (IOException e) {
             System.out.println("IO: " + e.getMessage());
