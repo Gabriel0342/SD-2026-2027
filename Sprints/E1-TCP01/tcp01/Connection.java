@@ -3,6 +3,7 @@ package tcp01;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
 
@@ -33,6 +34,8 @@ public class Connection extends Thread {
             out.flush();
         } catch (ClassNotFoundException e) {
             System.out.println("Class not found: " + e.getMessage());
+        } catch (InvalidClassException e) {
+            System.out.println("Class found but Version UID is incompatible: " + e.getMessage());
         } catch (EOFException e) {
             System.out.println("EOF: " + e.getMessage());
         } catch (IOException e) {
