@@ -13,6 +13,7 @@ public class TCPServer {
 
             while (true) {
                 Socket clientSocket = listenSocket.accept(); // Blocks until TCP connection is established
+                System.out.println("Connection accepted from " + clientSocket.getRemoteSocketAddress());
                 new Connection(clientSocket); // Dispatch the client to a new connection (thread)
             }
         } catch (IOException e) {

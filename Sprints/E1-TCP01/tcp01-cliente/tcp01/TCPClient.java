@@ -22,6 +22,12 @@ public class TCPClient {
             Place place = new Place("3500-000", "Viseu");
             Person person = new Person("Mateus", place, 2000);
 
+            System.out.println("Sending person:");
+            System.out.println("  Name: " + person.getName());
+            System.out.println("  Year: " + person.getYear());
+            System.out.println("  Postal code: " + person.getPlace().getPostalCode());
+            System.out.println("  Locality: " + person.getPlace().getLocality());
+
             out.writeObject(person); // Stores object, serialization metadata and class identifiers such as serialVersionUID in the stream
             out.flush(); // Send
 

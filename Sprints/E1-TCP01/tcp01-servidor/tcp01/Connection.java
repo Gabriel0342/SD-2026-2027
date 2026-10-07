@@ -26,8 +26,14 @@ public class Connection extends Thread {
 
             // Read person
             Person person = (Person) in.readObject(); // this also compares UID
+            System.out.println("Received person:");
+            System.out.println("  Name: " + person.getName());
+            System.out.println("  Year: " + person.getYear());
+            System.out.println("  Postal code: " + person.getPlace().getPostalCode());
+            System.out.println("  Locality: " + person.getPlace().getLocality());
+
             // Reply with person's info
-            out.writeUTF(person.getPlace().getLocality(), person.getPlace().getPostalCode());
+            out.writeUTF(person.getPlace().getLocality());
             out.flush();
         } catch (ClassNotFoundException e) {
             // May happen if classes packages are different
@@ -45,6 +51,7 @@ public class Connection extends Thread {
             } catch (IOException e) {
                 System.out.println("close: " + e.getMessage());
             }
+            System.out.println("Connection terminated with " + clientSocket.getRemoteSocketAddress());
         }
     }
 }
