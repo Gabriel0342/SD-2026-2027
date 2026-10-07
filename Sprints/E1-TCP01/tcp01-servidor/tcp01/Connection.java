@@ -13,24 +13,21 @@ public class Connection extends Thread {
     private Socket clientSocket;
 
     public Connection(Socket clientSocket) {
-        try {
-            this.clientSocket = clientSocket;
-            in = new ObjectInputStream(clientSocket.getInputStream());
-            out = new DataOutputStream(clientSocket.getOutputStream());
+        this.clientSocket = clientSocket;
 
-            start();
-        } catch (IOException e) {
-            System.out.println("Connection: " + e.getMessage());
-        }
+        start();
     }
 
     @Override
     public void run() {
         try {
+            in = new ObjectInputStream(clientSocket.getInputStream());
+            out = new DataOutputStream(clientSocket.getOutputStream());
+
             // Read person
             Person person = (Person) in.readObject(); // this also compares UID
             // Reply with person's info
-            out.writeUTF(person.getPlace().getLocality());
+            out.writeUTF(person.getPlace().getLocality(), person.getPlace().getPostalCode());
             out.flush();
         } catch (ClassNotFoundException e) {
             // May happen if classes packages are different
