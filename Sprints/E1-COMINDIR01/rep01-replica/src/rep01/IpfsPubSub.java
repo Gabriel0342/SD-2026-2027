@@ -56,9 +56,10 @@ public class IpfsPubSub {
         if (resp.statusCode() != 200) {
             throw new IOException("sub falhou (" + resp.statusCode() + ")");
         }
-        resp.body() // bloqueia à espera de cada linha
-            .filter(json -> json.contains("\"data\""))
-            .forEach(json -> onMessage.accept(fromMultibase(extractField(json, "data"))));
+        // O fluxo da subscricao nao termina; cada linha chega quando o daemon recebe uma mensagem.
+        resp.body()
+                .filter(json -> json.contains("\"data\""))
+                .forEach(json -> onMessage.accept(fromMultibase(extractField(json, "data"))));
     }
 
     // extração mínima de um campo de texto de um objeto JSON simples (evita bibliotecas externas)

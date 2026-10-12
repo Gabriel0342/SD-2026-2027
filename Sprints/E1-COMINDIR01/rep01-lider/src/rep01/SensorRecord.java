@@ -3,6 +3,7 @@ package rep01;
 import java.time.LocalDateTime;
 
 public class SensorRecord {
+    // O lider atribui o unico numero de sequencia global; as replicas usam-no para ordenar.
     private final long seq;
     private final String sensorId;
     private final double temperature;
@@ -20,12 +21,12 @@ public class SensorRecord {
         return new SensorRecord(seq, sensorId, temperature, LocalDateTime.now().withNano(0).toString());
     }
 
-    // converte o objeto para a linha que será gravada ou enviada
+    // O mesmo formato textual e usado no ficheiro e nas mensagens, sem serializacao Java.
     public String toLine() {
         return seq + ";" + sensorId + ";" + temperature + ";" + timestamp;
     }
 
-    // reconstrói um objeto a partir de uma linha recebida
+    // Fronteira de validacao: uma mensagem invalida nao deve ser aplicada pela replica.
     public static SensorRecord fromLine(String line) {
         String[] f = line.trim().split(";");
         if (f.length != 4) {
@@ -35,8 +36,19 @@ public class SensorRecord {
     }
 
     // Getters
-    public long getSeq() { return seq; }
-    public String getSensorId() { return sensorId; }
-    public double getTemperature() { return temperature; }
-    public String getTimestamp() { return timestamp; }
+    public long getSeq() {
+        return seq;
+    }
+
+    public String getSensorId() {
+        return sensorId;
+    }
+
+    public double getTemperature() {
+        return temperature;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
 }

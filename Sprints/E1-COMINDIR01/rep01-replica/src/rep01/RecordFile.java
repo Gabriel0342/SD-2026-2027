@@ -12,11 +12,13 @@ public class RecordFile {
     }
 
     public synchronized void append(SensorRecord r) throws IOException {
+        // O ficheiro so deve crescer pela ordem decidida pela replica.
         Files.writeString(path, r.toLine() + System.lineSeparator(), StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
     public synchronized long lastSeq() throws IOException {
+        // Uma replica reiniciada retoma a partir do ultimo registo persistido.
         if (!Files.exists(path)) {
             return 0;
         }

@@ -23,9 +23,11 @@ public class PubSubLeader {
 
             while (true) {
                 System.out.print("> ");
-                if (!sc.hasNextLine()) break;
+                if (!sc.hasNextLine())
+                    break; // bloqueia a espera da entrada do utilizador
                 String line = sc.nextLine().trim();
-                if (line.equalsIgnoreCase("sair")) break;
+                if (line.equalsIgnoreCase("sair"))
+                    break;
 
                 if (line.toLowerCase().startsWith("rajada ")) {
                     String[] parts = line.split("\\s+");
@@ -39,9 +41,9 @@ public class PubSubLeader {
                                 double temp = 15.0 + (30.0 - 15.0) * rand.nextDouble();
                                 temp = Math.round(temp * 10.0) / 10.0;
                                 SensorRecord r = SensorRecord.now(++seq, "SIM", temp);
-                                file.append(r);
-                                
-                                // Publica via IPFS PubSub em vez de DatagramPacket
+                                file.append(r); // a persistencia local precede a publicacao
+
+                                // Publica no topico; o lider fala apenas com o daemon local.
                                 pubsub.publish(TOPIC, r.toLine());
                                 tFim = System.currentTimeMillis();
                             }
@@ -66,8 +68,8 @@ public class PubSubLeader {
                     file.append(r2);
                     file.append(r3);
 
-                    // Envia r2, depois r3, e só no fim r1
-                    for (SensorRecord r : new SensorRecord[]{r2, r3, r1}) {
+                    // Envia r2, depois r3, e so no fim r1 para testar a retencao por seq.
+                    for (SensorRecord r : new SensorRecord[] { r2, r3, r1 }) {
                         pubsub.publish(TOPIC, r.toLine());
                         System.out.println("Enviado PubSub (fora de ordem): " + r.toLine());
                     }
@@ -88,7 +90,7 @@ public class PubSubLeader {
                 }
                 SensorRecord r = SensorRecord.now(++seq, p[0], temp);
                 file.append(r); // 1) escreve localmente
-                pubsub.publish(TOPIC, r.toLine()); // 2) publica no tópico PubSub
+                pubsub.publish(TOPIC, r.toLine()); // 2) publica no topico PubSub
                 System.out.println("Registado e publicado: " + r.toLine());
             }
         } catch (Exception e) {

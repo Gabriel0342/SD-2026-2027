@@ -22,16 +22,18 @@ public class PubSubReplica {
             System.out.println("Erro ao ler ficheiro: " + e.getMessage());
         }
 
-        long[] lastSeq = new long[]{ initialSeq };
-        long[] totalRecebidos = new long[]{ 0 };
-        long[] totalEscritos = new long[]{ 0 };
-        long[] tPrimeiraRececao = new long[]{ 0 };
-        long[] tUltimaRececao = new long[]{ 0 };
+        long[] lastSeq = new long[] { initialSeq };
+        long[] totalRecebidos = new long[] { 0 };
+        long[] totalEscritos = new long[] { 0 };
+        long[] tPrimeiraRececao = new long[] { 0 };
+        long[] tUltimaRececao = new long[] { 0 };
 
-        System.out.println("Réplica PubSub " + id + " ligada a " + api + " (último seq em ficheiro: " + lastSeq[0] + ")");
+        System.out
+                .println("Réplica PubSub " + id + " ligada a " + api + " (último seq em ficheiro: " + lastSeq[0] + ")");
 
         try {
-            // Subscreve o tópico; bloqueia a escuta de mensagens
+            // O Java fala com o daemon local; o daemon trata do gossip entre nos IPFS.
+            // Este metodo bloqueia enquanto a subscricao estiver ativa.
             pubsub.subscribe(TOPIC, line -> {
                 long agora = System.currentTimeMillis();
                 if (totalRecebidos[0] == 0) {
@@ -44,6 +46,7 @@ public class PubSubReplica {
                 try {
                     r = SensorRecord.fromLine(line);
                 } catch (IllegalArgumentException e) {
+                    // Uma mensagem invalida nao deve derrubar a subscricao.
                     System.out.println("REJEITADO: " + line.trim());
                     return;
                 }
@@ -52,6 +55,7 @@ public class PubSubReplica {
 
                 try {
                     if (seq <= lastSeq[0] || pending.containsKey(seq)) {
+                        // O gossipsub pode entregar uma mensagem ja conhecida pela aplicacao.
                         System.out.println("DUPLICADO: " + seq);
                     } else if (seq == lastSeq[0] + 1) {
                         file.append(r);
@@ -60,6 +64,7 @@ public class PubSubReplica {
                         System.out.println("Aplicado: " + r.toLine());
 
                         while (pending.containsKey(lastSeq[0] + 1)) {
+                            // Escreve pendentes apenas quando a lacuna foi preenchida.
                             SensorRecord next = pending.remove(lastSeq[0] + 1);
                             file.append(next);
                             lastSeq[0] = next.getSeq();
@@ -67,6 +72,7 @@ public class PubSubReplica {
                             System.out.println("Aplicado (que estava retido): " + next.toLine());
                         }
                     } else {
+                        // A memoria cresce se o seq em falta nunca for recuperado.
                         pending.put(seq, r);
                         System.out.println("EM ESPERA: " + seq + " (falta o registo " + (lastSeq[0] + 1) + ")");
                     }
@@ -74,9 +80,9 @@ public class PubSubReplica {
                     System.out.println("Erro ao escrever no ficheiro: " + e.getMessage());
                 }
 
-                System.out.println("--> [Stats R" + id + "] Rec: " + totalRecebidos[0] 
-                        + " | Escritos: " + totalEscritos[0] 
-                        + " | Retidos: " + pending.size() 
+                System.out.println("--> [Stats R" + id + "] Rec: " + totalRecebidos[0]
+                        + " | Escritos: " + totalEscritos[0]
+                        + " | Retidos: " + pending.size()
                         + " | T_1º: " + tPrimeiraRececao[0] + " ms | T_Último: " + tUltimaRececao[0] + " ms");
             });
         } catch (Exception e) {

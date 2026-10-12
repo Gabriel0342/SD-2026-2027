@@ -41,6 +41,7 @@ public class IpfsPubSub {
                 .header("Content-Type", "multipart/form-data; boundary=" + boundary)
                 .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
                 .build();
+        // Bloqueia ate a API HTTP local responder; isto nao confirma a rececao pelas replicas.
         HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
         if (resp.statusCode() != 200) {
             throw new IOException("pub falhou (" + resp.statusCode() + "): " + resp.body());
@@ -56,9 +57,10 @@ public class IpfsPubSub {
         if (resp.statusCode() != 200) {
             throw new IOException("sub falhou (" + resp.statusCode() + ")");
         }
-        resp.body() // bloqueia à espera de cada linha
-            .filter(json -> json.contains("\"data\""))
-            .forEach(json -> onMessage.accept(fromMultibase(extractField(json, "data"))));
+        // A subscricao e um fluxo continuo: bloqueia a espera da proxima mensagem JSON.
+        resp.body()
+                .filter(json -> json.contains("\"data\""))
+                .forEach(json -> onMessage.accept(fromMultibase(extractField(json, "data"))));
     }
 
     // extração mínima de um campo de texto de um objeto JSON simples (evita bibliotecas externas)

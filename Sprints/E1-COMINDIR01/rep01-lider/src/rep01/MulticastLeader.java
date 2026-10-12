@@ -12,7 +12,7 @@ public class MulticastLeader {
 
     public static void main(String[] args) {
         try (MulticastSocket socket = new MulticastSocket();
-             Scanner sc = new Scanner(System.in)) {
+                Scanner sc = new Scanner(System.in)) {
             InetAddress group = InetAddress.getByName(GROUP);
             socket.setTimeToLive(1);
             RecordFile file = new RecordFile("lider.txt");
@@ -23,9 +23,11 @@ public class MulticastLeader {
 
             while (true) {
                 System.out.print("> ");
-                if (!sc.hasNextLine()) break;
+                if (!sc.hasNextLine())
+                    break; // bloqueia a espera de uma linha da consola
                 String line = sc.nextLine().trim();
-                if (line.equalsIgnoreCase("sair")) break;
+                if (line.equalsIgnoreCase("sair"))
+                    break;
 
                 if (line.toLowerCase().startsWith("rajada ")) {
                     String[] parts = line.split("\\s+");
@@ -39,8 +41,9 @@ public class MulticastLeader {
                                 double temp = 15.0 + (30.0 - 15.0) * rand.nextDouble();
                                 temp = Math.round(temp * 10.0) / 10.0; // Arredonda a 1 casa decimal
                                 SensorRecord r = SensorRecord.now(++seq, "SIM", temp);
-                                file.append(r);
+                                file.append(r); // primeiro guarda localmente, depois propaga
                                 byte[] m = r.toLine().getBytes(StandardCharsets.UTF_8);
+                                // Um unico envio UDP e entregue pela rede a todos os membros do grupo.
                                 socket.send(new DatagramPacket(m, m.length, group, PORT));
                                 tFim = System.currentTimeMillis();
                             }
@@ -65,7 +68,8 @@ public class MulticastLeader {
                     file.append(r2);
                     file.append(r3);
 
-                    for (SensorRecord r : new SensorRecord[]{r2, r3, r1}) {
+                    // Este teste mostra que UDP nao garante a ordem de chegada.
+                    for (SensorRecord r : new SensorRecord[] { r2, r3, r1 }) {
                         byte[] m = r.toLine().getBytes(StandardCharsets.UTF_8);
                         socket.send(new DatagramPacket(m, m.length, group, PORT));
                         System.out.println("Enviado (fora de ordem): " + r.toLine());
@@ -86,7 +90,7 @@ public class MulticastLeader {
                     continue;
                 }
                 SensorRecord r = SensorRecord.now(++seq, p[0], temp);
-                file.append(r);
+                file.append(r); // se o lider falhar depois, as replicas podem ficar atrasadas
                 byte[] m = r.toLine().getBytes(StandardCharsets.UTF_8);
                 socket.send(new DatagramPacket(m, m.length, group, PORT));
                 System.out.println("Registado e enviado: " + r.toLine());
