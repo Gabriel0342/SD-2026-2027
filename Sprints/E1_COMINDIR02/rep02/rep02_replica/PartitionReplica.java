@@ -1,0 +1,230 @@
+package E1_COMINDIR02.rep02.rep02_replica;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+public class PartitionReplica {
+
+    // propriedades de sistema da simulação de perdas (-Dperda, -Ddescartar),
+    // aplicadas exclusivamente às mensagens recebidas pelo PubSub
+    private static double perda;
+    private static long descartar;
+    private static final AtomicBoolean JA_DESCARTADO = new AtomicBoolean(false);
+
+    public static void main(String[] args) throws Exception {
+        try {
+            perda = Double.parseDouble(System.getProperty("perda", "0"));
+            descartar = Long.parseLong(System.getProperty("descartar", "-1"));
+        } catch (NumberFormatException e) {
+            System.out.println("Propriedade de simulação inválida: " + e.getMessage());
+            return;
+        }
+
+        String api = "http://127.0.0.1:" + (args.length > 2 ? args[2] : "5001") + "/api/v0";
+
+        String id;
+        String partes;
+        int[] ks;
+        if (args.length == 0) {
+            // sem argumentos: id e partições por atribuição automática — a réplica j guarda
+            // as partições j e j+1 (módulo 3); três arranques dão (0,1), (1,2) e (2,0),
+            // com cada partição em exatamente duas réplicas (R = 2, Parte B)
+            Atribuicao a = autoAtribuicao();
+            id = a.id();
+            ks = a.ks();
+            partes = a.partes();
+            System.out.println("Atribuição automática: réplica " + id + " com as partições " + partes);
+        } else {
+            id = args[0];
+            partes = args.length > 1 ? args[1] : "0"; // sem lista: partição 0
+            try {
+                String[] campos = partes.split(",");
+                ks = new int[campos.length];
+                for (int i = 0; i < campos.length; i++) {
+                    ks[i] = Integer.parseInt(campos[i].trim());
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Uso: PartitionReplica [id] [partições] [portoApi]");
+                System.out.println("Partições mal formadas: " + partes);
+                return;
+            }
+        }
+
+        System.out.println("Réplica " + id + " ligada a " + api + " com as partições " + partes
+                + " (perda=" + perda + ", descartar=" + (descartar < 0 ? "nenhum" : descartar) + ")");
+
+        // uma thread por partição: a subscrição bloqueia e não termina
+        Thread[] threads = new Thread[ks.length];
+        for (int i = 0; i < ks.length; i++) {
+            Particao p = new Particao(api, id, ks[i]);
+            threads[i] = new Thread(p, "particao-" + ks[i]);
+            threads[i].start();
+        }
+        for (Thread t : threads) { // a thread principal aguarda a conclusão das subscrições
+            t.join();
+        }
+    }
+
+    // canais das trancas de id automático: mantêm-se abertos até o processo terminar
+    private static final List<FileChannel> TRANCAS = new ArrayList<>();
+
+    // resultado da atribuição automática: id da réplica e as partições que lhe ficam
+    private record Atribuicao(String id, int[] ks, String partes) { }
+
+    // atribuição automática de id e partições: a réplica j guarda as partições j e
+    // j+1, módulo 3; o primeiro id (0, 1, 2, ...) cujos ficheiros replica-<id>-p<k>.lock
+    // não estejam trancados por outra réplica ainda viva; a tranca é libertada pelo SO
+    // quando o processo morre
+    static Atribuicao autoAtribuicao() throws IOException {
+        for (int n = 0; n < 100; n++) { // limite de segurança: 100 réplicas vivas chega
+            int[] ks = { n % 3, (n + 1) % 3 }; // três partições, fator de replicação 2
+            List<FileChannel> canais = new ArrayList<>();
+            try {
+                for (int k : ks) {
+                    FileChannel ch = FileChannel.open(Paths.get("replica-" + n + "-p" + k + ".lock"),
+                            StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+                    if (ch.tryLock() == null) { // outra réplica viva tem este id
+                        ch.close();
+                        throw new IllegalStateException("id ocupado");
+                    }
+                    canais.add(ch);
+                }
+                TRANCAS.addAll(canais); // só aqui é que o id fica tomado
+                return new Atribuicao(Integer.toString(n), ks, ks[0] + "," + ks[1]);
+            } catch (IOException | IllegalStateException e) {
+                for (FileChannel ch : canais) { // liberta as trancas obtidas e tenta o id seguinte
+                    ch.close();
+                }
+            }
+        }
+        throw new IOException("sem ids livres (0..99)");
+    }
+
+    // estado e lógica de uma partição subscrita (uma instância por partição)
+    private static class Particao implements Runnable {
+        private final String api;
+        private final int k;
+        private final RecordFile file;
+        private long ultimo;                                       // último seq escrito
+        private final TreeMap<Long, SensorRecord> retidos = new TreeMap<>();
+        private String hostLider;                                  // atualizados a cada REG recebida
+        private int portoLider;
+
+        Particao(String api, String id, int k) throws IOException {
+            this.api = api;
+            this.k = k;
+            this.file = new RecordFile("replica-" + id + "-p" + k + ".txt");
+            this.ultimo = file.lastSeq();
+        }
+
+        @Override
+        public void run() {
+            System.out.println("Partição " + k + ": último seq em ficheiro: " + ultimo);
+            try {
+                new IpfsPubSub(api).subscribe(Wire.topicData(k), this::onReg);
+            } catch (Exception e) { // daemon indisponível, interrupção...
+                System.out.println("Subscrição da partição " + k + " terminada: " + e.getMessage());
+            }
+        }
+
+        // receção de uma mensagem REG pelo PubSub
+        private void onReg(String msg) {
+            try {
+                String[] f = Wire.regParts(msg); // { endereço, porto, linha do registo }
+                SensorRecord r = SensorRecord.fromLine(f[2]);
+
+                if (r.getSeq() == descartar && JA_DESCARTADO.compareAndSet(false, true)) {
+                    System.out.println("DESCARTADO (simulação): " + r.getSeq()); // apenas a primeira receção
+                    return;
+                }
+                if (ThreadLocalRandom.current().nextDouble() < perda) {
+                    System.out.println("DESCARTADO (simulação): " + r.getSeq());
+                    return;
+                }
+
+                hostLider = f[0];
+                portoLider = Integer.parseInt(f[1]);
+                aplicar(r, false);
+                if (retidos.size() > Wire.LIMITE_RETIDOS) { // a condição persiste se a recuperação falhar
+                    recuperar(); // na própria thread de subscrição
+                }
+            } catch (IllegalArgumentException e) { // REG, registo ou porto mal formado
+                System.out.println("REJEITADO: " + msg.trim());
+            } catch (IOException e) {
+                System.out.println("Erro ao escrever no ficheiro: " + e.getMessage());
+            }
+        }
+
+        // regra de aplicação da COMINDIR01, comum à receção por PubSub e à recuperação
+        private void aplicar(SensorRecord r, boolean recuperado) throws IOException {
+            long seq = r.getSeq();
+            if (seq <= ultimo || retidos.containsKey(seq)) { // já escrito ou retido
+                System.out.println("DUPLICADO: " + seq);
+            } else if (seq == ultimo + 1) {
+                file.append(r);
+                ultimo = seq;
+                System.out.println(recuperado ? "RECUPERADO: " + seq : "Aplicado: " + r.toLine());
+                escreverEmSequencia();
+            } else { // registo antecipado: fica retido em memória
+                retidos.put(seq, r);
+                System.out.println("EM ESPERA: " + seq + " (falta o registo " + (ultimo + 1) + ")");
+            }
+        }
+
+        // escreve os retidos que passaram a estar em sequência
+        private void escreverEmSequencia() throws IOException {
+            while (!retidos.isEmpty() && retidos.firstKey() == ultimo + 1) {
+                SensorRecord r = retidos.remove(retidos.firstKey());
+                file.append(r);
+                ultimo = r.getSeq();
+                System.out.println("Aplicado (que estava retido): " + r.toLine());
+            }
+        }
+
+        // ligação TCP ao líder: PEDIDO <de> <até> e leitura dos registos até FIM
+        private void recuperar() {
+            long de = ultimo + 1;
+            long ate = retidos.isEmpty() ? de - 1 : retidos.firstKey() - 1;
+            if (de > ate || hostLider == null) { // nada a pedir ou líder ainda desconhecido
+                return;
+            }
+            System.out.println("RECUPERAÇÃO: " + de + ".." + ate + " pedida a " + hostLider + ":" + portoLider);
+            try (Socket s = new Socket()) {
+                s.connect(new InetSocketAddress(hostLider, portoLider), Wire.T_TCP_MS); // bloqueia até a ligação ser aceite
+                s.setSoTimeout(Wire.T_TCP_MS); // readLine deixa de bloquear indefinidamente
+                PrintWriter out = new PrintWriter(new OutputStreamWriter(s.getOutputStream(), StandardCharsets.UTF_8), true);
+                BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream(), StandardCharsets.UTF_8));
+
+                out.println("PEDIDO " + de + " " + ate);
+
+                String linha;
+                while ((linha = in.readLine()) != null && !linha.equals("FIM")) {
+                    if (linha.startsWith("ERRO")) { // pedido recusado pelo líder
+                        throw new IOException(linha.substring("ERRO".length()).trim());
+                    }
+                    aplicar(SensorRecord.fromLine(linha), true);
+                }
+                if (linha == null) { // a ligação fechou antes de FIM
+                    throw new IOException("ligação fechada antes de FIM");
+                }
+                escreverEmSequencia();
+            } catch (IOException | RuntimeException e) { // recusa, tempo esgotado, registo mal formado...
+                System.out.println("RECUPERAÇÃO FALHOU: " + e.getMessage());
+            }
+        }
+    }
+}
