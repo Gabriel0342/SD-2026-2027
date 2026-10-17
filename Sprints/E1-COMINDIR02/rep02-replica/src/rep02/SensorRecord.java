@@ -1,4 +1,4 @@
-package E1_COMINDIR02.rep02.rep02_lider;
+package rep02;
 
 import java.time.LocalDateTime;
 
@@ -15,12 +15,12 @@ public class SensorRecord {
         this.timestamp = timestamp;
     }
 
-    // cria um registo com o instante atual (usado só pelo líder)
+    // cria um registo com o instante atual (usado sÃ³ pelo lÃ­der)
     public static SensorRecord now(long seq, String sensorId, double temperature) {
         return new SensorRecord(seq, sensorId, temperature, LocalDateTime.now().withNano(0).toString());
     }
 
-    // representação textual: é o que se guarda no ficheiro e o que se envia pela rede
+    // representaÃ§Ã£o textual: Ã© o que se guarda no ficheiro e o que se envia pela rede
     public String toLine() {
         return seq + ";" + sensorId + ";" + temperature + ";" + timestamp;
     }
@@ -38,3 +38,4 @@ public class SensorRecord {
     public double getTemperature() { return temperature; }
     public String getTimestamp() { return timestamp; }
 }
+

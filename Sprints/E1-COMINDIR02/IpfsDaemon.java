@@ -1,13 +1,11 @@
-package E1_COMINDIR02;
-
-// IpfsDaemon.java — arranca o Kubo se a API não estiver a responder mas requer a instalação do Kubo
+// IpfsDaemon.java â€” arranca o Kubo se a API nÃ£o estiver a responder mas requer a instalaÃ§Ã£o do Kubo
 import java.net.URI;
 import java.net.http.*;
 
 public class IpfsDaemon {
     public static void main(String[] args) throws Exception {
         if (isUp()) {
-            System.out.println("Kubo já está a correr.");
+            System.out.println("Kubo jÃ¡ estÃ¡ a correr.");
             return;
         }
         new ProcessBuilder("ipfs", "daemon").inheritIO().start();
@@ -15,7 +13,7 @@ public class IpfsDaemon {
         for (int i = 0; i < 30 && !isUp(); i++){
             Thread.sleep(1000);
         }
-        System.out.println(isUp() ? "Kubo pronto." : "Kubo não respondeu em 30 s.");
+        System.out.println(isUp() ? "Kubo pronto." : "Kubo nÃ£o respondeu em 30 s.");
     }
     static boolean isUp() {
         try {
@@ -24,3 +22,5 @@ public class IpfsDaemon {
         } catch (Exception e) { return false; }
     }
 }
+
+
