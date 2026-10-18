@@ -13,28 +13,35 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.TreeMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PartitionReplica {
 
-    // propriedades de sistema da simulacao de perdas (-Dperda, -Ddescartar),
-    // aplicadas exclusivamente as mensagens recebidas pelo PubSub
+    // propriedades da simulacao de perdas (-Dperda, -Ddescartar ou replica.perda,
+    // replica.descartar em runtime.properties), aplicadas exclusivamente as
+    // mensagens recebidas pelo PubSub
     private static double perda;
     private static long descartar;
     private static final AtomicBoolean JA_DESCARTADO = new AtomicBoolean(false);
 
     public static void main(String[] args) throws Exception {
+        Properties config = RuntimeConfig.load();
         try {
-            perda = Double.parseDouble(System.getProperty("perda", "0"));
-            descartar = Long.parseLong(System.getProperty("descartar", "-1"));
+            perda = Double.parseDouble(System.getProperty("perda",
+                    RuntimeConfig.value(config, "replica.perda", "0")));
+            descartar = Long.parseLong(System.getProperty("descartar",
+                    RuntimeConfig.value(config, "replica.descartar", "-1")));
         } catch (NumberFormatException e) {
             System.out.println("Propriedade de simulacao invalida: " + e.getMessage());
             return;
         }
 
-        String api = "http://127.0.0.1:" + (args.length > 2 ? args[2] : "5001") + "/api/v0";
+        String apiPort = args.length > 2 ? args[2]
+                : RuntimeConfig.value(config, "replica.api.port", "5001");
+        String api = "http://127.0.0.1:" + apiPort + "/api/v0";
 
         String id;
         String partes;
@@ -228,5 +235,4 @@ public class PartitionReplica {
         }
     }
 }
-
 

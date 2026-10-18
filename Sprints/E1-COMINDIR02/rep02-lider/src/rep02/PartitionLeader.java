@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class PartitionLeader {
@@ -13,10 +14,14 @@ public class PartitionLeader {
 
     public static void main(String[] args) throws Exception {
 
-        int n = args.length > 1 ? Integer.parseInt(args[1]) : 3; // PartitionLeader <k> <N>; sem N: tres particoes (Parte B)
+        Properties config = RuntimeConfig.load();
+        int n = args.length > 1 ? Integer.parseInt(args[1])
+                : Integer.parseInt(RuntimeConfig.value(config, "partitions", "3"));
         Partitioner partitioner = new Partitioner(n);
-        String endereco = args.length > 2 ? args[2] : "127.0.0.1";
-        String api = args.length > 3 ? args[3] : "http://127.0.0.1:5001/api/v0";
+        String endereco = args.length > 2 ? args[2]
+                : RuntimeConfig.value(config, "leader.host", "127.0.0.1");
+        String api = args.length > 3 ? args[3]
+                : RuntimeConfig.value(config, "leader.api", "http://127.0.0.1:5001/api/v0");
 
         ServerSocket server;
         final int k;
@@ -139,5 +144,4 @@ public class PartitionLeader {
         }
     }
 }
-
 

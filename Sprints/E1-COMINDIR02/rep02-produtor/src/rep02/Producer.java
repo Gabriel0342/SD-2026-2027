@@ -1,16 +1,19 @@
 package rep02;
 
 import java.util.Random;
+import java.util.Properties;
 import java.util.Scanner;
 
 public class Producer {
     static final String API = "http://127.0.0.1:5001/api/v0"; // API por omissao
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+        Properties config = RuntimeConfig.load();
         // numero de particoes e endereco da API: Producer <N> [api];
-        // sem argumentos: N = 3 (Parte B) e a API por omissao
-        int n = args.length > 0 ? Integer.parseInt(args[0]) : 3;
-        String api = args.length > 1 ? args[1] : API;
+        // sem argumentos, os valores sao lidos de runtime.properties
+        int n = args.length > 0 ? Integer.parseInt(args[0])
+                : Integer.parseInt(RuntimeConfig.value(config, "partitions", "3"));
+        String api = args.length > 1 ? args[1] : RuntimeConfig.value(config, "producer.api", API);
         Partitioner partitioner = new Partitioner(n);
         IpfsPubSub pubsub = new IpfsPubSub(api);
         Random rand = new Random();              // sensores e temperaturas aleatorias
@@ -108,5 +111,4 @@ public class Producer {
         return "S01";
     }
 }
-
 
