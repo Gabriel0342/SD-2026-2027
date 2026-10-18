@@ -13,13 +13,13 @@ public class RecordFile {
         this.path = Paths.get(fileName);
     }
 
-    // acrescenta uma linha ao fim do ficheiro (cria-o se n???o existir)
+    // acrescenta uma linha ao fim do ficheiro (cria-o se nao existir)
     public synchronized void append(SensorRecord r) throws IOException {
         Files.writeString(path, r.toLine() + System.lineSeparator(), StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
-    // n???mero de sequ???ncia do ???ltimo registo guardado (0 se o ficheiro n???o existir)
+    // numero de sequencia do ultimo registo guardado (0 se o ficheiro nao existir)
     public synchronized long lastSeq() throws IOException {
         if (!Files.exists(path)) {
             return 0;
@@ -32,7 +32,7 @@ public class RecordFile {
         }
         return last;
     }
-    // registos com from <= seq <= to, pela ordem do ficheiro (lista vazia se o ficheiro n???o existir)
+    // registos com from <= seq <= to, pela ordem do ficheiro (lista vazia se o ficheiro nao existir)
     public synchronized List<SensorRecord> range(long from, long to) throws IOException {
         List<SensorRecord> out = new ArrayList<>();
         if (!Files.exists(path)) {

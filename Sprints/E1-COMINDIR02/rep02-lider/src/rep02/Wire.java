@@ -1,9 +1,9 @@
 package rep02;
 
 public final class Wire {
-    public static final int LIMITE_RETIDOS = 10;   // acima deste n???mero de retidos, a r???plica recupera
-    public static final int T_TCP_MS = 5000;       // tempo m???ximo de liga??????o e de espera por cada linha
-    public static final int PORTO_BASE = 7000;     // porto de recupera??????o do l???der da parti??????o k: 7000 + k
+    public static final int LIMITE_RETIDOS = 10;   // acima deste numero de retidos, a replica recupera
+    public static final int T_TCP_MS = 5000;       // tempo maximo de ligacao e de espera por cada linha
+    public static final int PORTO_BASE = 7000;     // porto de recuperacao do lider da particao k: 7000 + k
 
     private Wire() { }
 
@@ -12,12 +12,12 @@ public final class Wire {
 
     public static String in(String sensor, double temp) { return "IN;" + sensor + ";" + temp; }
 
-    // REG;<endere???o>;<porto>;<seq>;<sensor>;<temperatura>;<instante>
+    // REG;<endereco>;<porto>;<seq>;<sensor>;<temperatura>;<instante>
     public static String reg(String host, int port, SensorRecord r) {
         return "REG;" + host + ";" + port + ";" + r.toLine();
     }
 
-    // tipo da mensagem (IN, REG); lan???a IllegalArgumentException se n???o houver tipo
+    // tipo da mensagem (IN, REG); lanca IllegalArgumentException se nao houver tipo
     public static String type(String msg) {
         String m = msg.trim();
         int i = m.indexOf(';');
@@ -27,13 +27,13 @@ public final class Wire {
         return m.substring(0, i);
     }
 
-    // conte???do da mensagem sem o tipo
+    // conteudo da mensagem sem o tipo
     public static String body(String msg) {
         String m = msg.trim();
         return m.substring(m.indexOf(';') + 1);
     }
 
-    // divide uma mensagem REG em { endere???o, porto, linha do registo }
+    // divide uma mensagem REG em { endereco, porto, linha do registo }
     public static String[] regParts(String msg) {
         String[] f = msg.trim().split(";", 4);
         if (f.length != 4 || !f[0].equals("REG")) {

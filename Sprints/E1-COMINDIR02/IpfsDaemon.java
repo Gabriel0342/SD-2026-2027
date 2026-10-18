@@ -1,11 +1,11 @@
-// IpfsDaemon.java ??" arranca o Kubo se a API n???o estiver a responder mas requer a instala??????o do Kubo
+// IpfsDaemon.java - arranca o Kubo se a API nao estiver a responder mas requer a instalacao do Kubo
 import java.net.URI;
 import java.net.http.*;
 
 public class IpfsDaemon {
     public static void main(String[] args) throws Exception {
         if (isUp()) {
-            System.out.println("Kubo j??? est??? a correr.");
+            System.out.println("Kubo ja esta a correr.");
             return;
         }
         new ProcessBuilder("ipfs", "daemon").inheritIO().start();
@@ -13,7 +13,7 @@ public class IpfsDaemon {
         for (int i = 0; i < 30 && !isUp(); i++){
             Thread.sleep(1000);
         }
-        System.out.println(isUp() ? "Kubo pronto." : "Kubo n???o respondeu em 30 s.");
+        System.out.println(isUp() ? "Kubo pronto." : "Kubo nao respondeu em 30 s.");
     }
     static boolean isUp() {
         try {
