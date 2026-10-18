@@ -5,12 +5,12 @@ public final class Partitioner {
 
     public Partitioner(int n) {
         if (n < 1) {
-            throw new IllegalArgumentException("NÃºmero de partiÃ§Ãµes invÃ¡lido: " + n);
+            throw new IllegalArgumentException("N???mero de parti??????es inv???lido: " + n);
         }
         this.n = n;
     }
 
-    // partiÃ§Ã£o de um sensor: determinÃ­stica e igual em qualquer JVM
+    // parti??????o de um sensor: determin???stica e igual em qualquer JVM
     public int of(String sensorId) {
         return Math.floorMod(sensorId.hashCode(), n);
     }

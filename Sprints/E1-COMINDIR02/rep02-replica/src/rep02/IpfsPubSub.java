@@ -18,7 +18,7 @@ public class IpfsPubSub {
         this.api = api;
     }
 
-    // o Kubo exige o tÃ³pico e os dados em multibase: base64url sem padding, com prefixo 'u'
+    // o Kubo exige o t???pico e os dados em multibase: base64url sem padding, com prefixo 'u'
     static String toMultibase(String s) {
         return "u" + Base64.getUrlEncoder().withoutPadding()
                 .encodeToString(s.getBytes(StandardCharsets.UTF_8));
@@ -26,12 +26,12 @@ public class IpfsPubSub {
 
     static String fromMultibase(String s) {
         if (!s.startsWith("u")) {
-            throw new IllegalArgumentException("CodificaÃ§Ã£o multibase nÃ£o suportada: " + s);
+            throw new IllegalArgumentException("Codifica??????o multibase n???o suportada: " + s);
         }
         return new String(Base64.getUrlDecoder().decode(s.substring(1)), StandardCharsets.UTF_8);
     }
 
-    // publica uma mensagem no tÃ³pico (a mensagem segue no corpo, como ficheiro multipart)
+    // publica uma mensagem no t???pico (a mensagem segue no corpo, como ficheiro multipart)
     public void publish(String topic, String message) throws IOException, InterruptedException {
         String boundary = "rep01-" + System.nanoTime();
         String body = "--" + boundary + "\r\n"
@@ -49,7 +49,7 @@ public class IpfsPubSub {
         }
     }
 
-    // subscreve o tÃ³pico; NÃƒO TERMINA: cada linha da resposta Ã© uma mensagem JSON recebida
+    // subscreve o t???pico; N?fO TERMINA: cada linha da resposta ??? uma mensagem JSON recebida
     public void subscribe(String topic, Consumer<String> onMessage) throws IOException, InterruptedException {
         HttpRequest req = HttpRequest.newBuilder(URI.create(api + "/pubsub/sub?arg=" + toMultibase(topic)))
                 .POST(HttpRequest.BodyPublishers.noBody())
@@ -58,12 +58,12 @@ public class IpfsPubSub {
         if (resp.statusCode() != 200) {
             throw new IOException("sub falhou (" + resp.statusCode() + ")");
         }
-        resp.body() // bloqueia Ã  espera de cada linha
+        resp.body() // bloqueia ??? espera de cada linha
                 .filter(json -> json.contains("\"data\""))
                 .forEach(json -> onMessage.accept(fromMultibase(extractField(json, "data"))));
     }
 
-    // extraÃ§Ã£o mÃ­nima de um campo de texto de um objeto JSON simples (evita bibliotecas externas)
+    // extra??????o m???nima de um campo de texto de um objeto JSON simples (evita bibliotecas externas)
     static String extractField(String json, String field) {
         String key = "\"" + field + "\":\"";
         int start = json.indexOf(key);

@@ -15,12 +15,12 @@ public class SensorRecord {
         this.timestamp = timestamp;
     }
 
-    // cria um registo com o instante atual (usado sÃ³ pelo lÃ­der)
+    // cria um registo com o instante atual (usado s??? pelo l???der)
     public static SensorRecord now(long seq, String sensorId, double temperature) {
         return new SensorRecord(seq, sensorId, temperature, LocalDateTime.now().withNano(0).toString());
     }
 
-    // representaÃ§Ã£o textual: Ã© o que se guarda no ficheiro e o que se envia pela rede
+    // representa??????o textual: ??? o que se guarda no ficheiro e o que se envia pela rede
     public String toLine() {
         return seq + ";" + sensorId + ";" + temperature + ";" + timestamp;
     }

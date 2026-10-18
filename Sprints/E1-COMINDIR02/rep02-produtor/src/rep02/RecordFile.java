@@ -14,13 +14,13 @@ public class RecordFile {
         this.path = Paths.get(fileName);
     }
 
-    // acrescenta uma linha ao fim do ficheiro (cria-o se nÃ£o existir)
+    // acrescenta uma linha ao fim do ficheiro (cria-o se n???o existir)
     public synchronized void append(SensorRecord r) throws IOException {
         Files.writeString(path, r.toLine() + System.lineSeparator(), StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
-    // nÃºmero de sequÃªncia do Ãºltimo registo guardado (0 se o ficheiro nÃ£o existir)
+    // n???mero de sequ???ncia do ???ltimo registo guardado (0 se o ficheiro n???o existir)
     public synchronized long lastSeq() throws IOException {
         if (!Files.exists(path)) {
             return 0;

@@ -4,23 +4,23 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class Producer {
-    static final String API = "http://127.0.0.1:5001/api/v0"; // API por omissÃ£o
+    static final String API = "http://127.0.0.1:5001/api/v0"; // API por omiss???o
 
     public static void main(String[] args) {
-        // nÃºmero de partiÃ§Ãµes e endereÃ§o da API: Producer <N> [api];
-        // sem argumentos: N = 3 (Parte B) e a API por omissÃ£o
+        // n???mero de parti??????es e endere???o da API: Producer <N> [api];
+        // sem argumentos: N = 3 (Parte B) e a API por omiss???o
         int n = args.length > 0 ? Integer.parseInt(args[0]) : 3;
         String api = args.length > 1 ? args[1] : API;
         Partitioner partitioner = new Partitioner(n);
         IpfsPubSub pubsub = new IpfsPubSub(api);
-        Random rand = new Random();              // sensores e temperaturas aleatÃ³rias
-        int[] contadores = new int[n];           // leituras publicadas por partiÃ§Ã£o
+        Random rand = new Random();              // sensores e temperaturas aleat???rias
+        int[] contadores = new int[n];           // leituras publicadas por parti??????o
 
-        System.out.println("Produtor pronto (API: " + api + ", " + n + " partiÃ§Ãµes).");
+        System.out.println("Produtor pronto (API: " + api + ", " + n + " parti??????es).");
         System.out.println("Formato: <sensor> <temperatura> | 'rajada <n> <s>' | 'rajada-quente <n> <s>' | 'sair'");
 
         try (Scanner sc = new Scanner(System.in)) {
-            // ciclo de leitura de comandos: bloqueia Ã  espera de uma linha
+            // ciclo de leitura de comandos: bloqueia ??? espera de uma linha
             while (true) {
                 System.out.print("> ");
                 if (!sc.hasNextLine()) {
@@ -34,8 +34,8 @@ public class Producer {
                     continue;         // ignora linhas vazias
                 }
 
-                // rajada <n> <s>: publica n leituras, o mais depressa possÃ­vel, com sensores aleatÃ³rios entre S01 e S<s>
-                // rajada-quente <n> <s>: igual, mas 80 % das leituras vÃªm de S01 (chave quente)
+                // rajada <n> <s>: publica n leituras, o mais depressa poss???vel, com sensores aleat???rios entre S01 e S<s>
+                // rajada-quente <n> <s>: igual, mas 80 % das leituras v???m de S01 (chave quente)
                 boolean quente = line.toLowerCase().startsWith("rajada-quente ");
                 if (quente || line.toLowerCase().startsWith("rajada ")) {
                     String[] parts = line.split("\\s+");
@@ -44,30 +44,30 @@ public class Producer {
                         continue;
                     }
                     try {
-                        int nLeituras = Integer.parseInt(parts[1]); // nÃºmero de leituras
+                        int nLeituras = Integer.parseInt(parts[1]); // n???mero de leituras
                         int s = Integer.parseInt(parts[2]); // sensores de S01 a S<s>
                         if (nLeituras < 1 || s < 1) {
-                            System.out.println("Valores invÃ¡lidos.");
+                            System.out.println("Valores inv???lidos.");
                             continue;
                         }
 
-                        long tInicio = System.currentTimeMillis(); // instante da 1Âª publicaÃ§Ã£o
+                        long tInicio = System.currentTimeMillis(); // instante da 1??? publica??????o
                         long tFim = tInicio;
                         for (int i = 0; i < nLeituras; i++) {
                             String sensor = quente
                                     ? sensorQuente(rand, s)
-                                    : String.format("S%02d", rand.nextInt(s) + 1); // sensor aleatÃ³rio
-                            double temp = Math.round((15.0 + 15.0 * rand.nextDouble()) * 10.0) / 10.0; // temperatura aleatÃ³ria entre 15 e 30
+                                    : String.format("S%02d", rand.nextInt(s) + 1); // sensor aleat???rio
+                            double temp = Math.round((15.0 + 15.0 * rand.nextDouble()) * 10.0) / 10.0; // temperatura aleat???ria entre 15 e 30
                             publicar(pubsub, partitioner, contadores, sensor, temp);
-                            tFim = System.currentTimeMillis(); // instante da Ãºltima publicaÃ§Ã£o
+                            tFim = System.currentTimeMillis(); // instante da ???ltima publica??????o
                         }
-                        System.out.println("Rajada concluÃ­da: " + nLeituras + " leituras.");
+                        System.out.println("Rajada conclu???da: " + nLeituras + " leituras.");
                         for (int k = 0; k < n; k++) {
                             System.out.println("p" + k + ": " + contadores[k] + " leituras");
                         }
-                        System.out.println("Primeira: " + tInicio + " ms | Ãšltima: " + tFim + " ms | DuraÃ§Ã£o: " + (tFim - tInicio) + " ms");
+                        System.out.println("Primeira: " + tInicio + " ms | ?sltima: " + tFim + " ms | Dura??????o: " + (tFim - tInicio) + " ms");
                     } catch (NumberFormatException e) {
-                        System.out.println("rajada: n e s tÃªm de ser inteiros.");
+                        System.out.println("rajada: n e s t???m de ser inteiros.");
                     }
                     continue;
                 }
@@ -75,32 +75,32 @@ public class Producer {
                 // publica uma leitura
                 String[] p = line.split("\\s+");
                 if (p.length != 2) {
-                    System.out.println("Formato invÃ¡lido.");
+                    System.out.println("Formato inv???lido.");
                     continue;
                 }
                 double temp;
                 try {
-                    temp = Double.parseDouble(p[1]); // converte o texto em nÃºmero
+                    temp = Double.parseDouble(p[1]); // converte o texto em n???mero
                 } catch (NumberFormatException e) {
-                    System.out.println("Temperatura invÃ¡lida: " + p[1]);
+                    System.out.println("Temperatura inv???lida: " + p[1]);
                     continue;
                 }
-                publicar(pubsub, partitioner, contadores, p[0], temp); // publica IN no tÃ³pico de entrada da partiÃ§Ã£o do sensor
+                publicar(pubsub, partitioner, contadores, p[0], temp); // publica IN no t???pico de entrada da parti??????o do sensor
             }
         } catch (Exception e) {
             System.out.println("Erro: " + e.getMessage());
         }
     }
 
-    // publica a leitura no tÃ³pico de entrada da partiÃ§Ã£o do sensor e assinala o destino
+    // publica a leitura no t???pico de entrada da parti??????o do sensor e assinala o destino
     static void publicar(IpfsPubSub ps, Partitioner pt, int[] contadores, String sensor, double temp) throws Exception {
         int k = pt.of(sensor);
         ps.publish(Wire.topicIn(k), Wire.in(sensor, temp));
         contadores[k]++;
-        System.out.println("Publicado: " + Wire.in(sensor, temp) + " â†’ p" + k);
+        System.out.println("Publicado: " + Wire.in(sensor, temp) + " ??' p" + k);
     }
 
-    // sensor de uma leitura de rajada-quente: 80 % vÃªm de S01, o resto de S02 a S<s>
+    // sensor de uma leitura de rajada-quente: 80 % v???m de S01, o resto de S02 a S<s>
     static String sensorQuente(Random rand, int s) {
         if (s >= 2 && rand.nextDouble() >= 0.8) {
             return String.format("S%02d", rand.nextInt(s - 1) + 2);
