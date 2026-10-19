@@ -2,3 +2,8 @@
 out/
 *.class
 .vscode/
+
+# Ficheiros gerados pelos processos dos sprints
+Sprints/**/lider*.txt
+Sprints/**/replica*.txt
+Sprints/**/*.lock
