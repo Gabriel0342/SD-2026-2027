@@ -61,6 +61,7 @@ public final class AlarmProcessor {
             try {
                 String[] parts = Wire.regParts(msg);
                 SensorRecord record = SensorRecord.fromLine(parts[2], n);
+                // Mitigação de flooding em rede (evitar alarmes sobre alarmes)
                 if (record.getSensorId().startsWith("ALARM-")) {
                     return;
                 }
