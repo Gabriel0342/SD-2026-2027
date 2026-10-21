@@ -5,7 +5,8 @@ import java.util.Properties;
 import java.util.Set;
 
 public final class AlarmProcessor {
-    private AlarmProcessor() { }
+    private AlarmProcessor() {
+    }
 
     public static void main(String[] args) throws Exception {
         Properties config = RuntimeConfig.load();
@@ -78,9 +79,18 @@ public final class AlarmProcessor {
                     }
                 }
                 if (alarm != null) {
-                    new IpfsPubSub(api).publish(Wire.topicIn(target), alarm);
-                    System.out.println("ALARME: " + record.getSensorId() + " p" + k
-                            + "#" + record.getSeq() + " -> p" + target);
+                    final String finalAlarm = alarm;
+                    final int finalTarget = target;
+                    // Nova thread para não bloquear no pedido HTTP sincrono
+                    new Thread(() -> {
+                        try {
+                            new IpfsPubSub(api).publish(Wire.topicIn(finalTarget), finalAlarm);
+                            System.out.println("ALARME: " + record.getSensorId() + " p" + k
+                                    + "#" + record.getSeq() + " -> p" + finalTarget);
+                        } catch (Exception e) {
+                            System.out.println("Erro ao publicar o alarme: " + e.getMessage());
+                        }
+                    }).start();
                 }
             } catch (Exception e) {
                 System.out.println("REJEITADO pelo processador: " + msg.trim() + " (" + e.getMessage() + ")");
