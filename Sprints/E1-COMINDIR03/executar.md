@@ -162,6 +162,11 @@ sair
 
 O produtor envia `L = 0` e um vetor causal inicializado a zeros.
 
+Na `rajada-quente`, 80% das leituras percorrem ciclicamente `S01`, `S02` e
+`S03` (ou todos os sensores disponíveis quando `s < 3`), distribuindo os
+alarmes pelas partições correspondentes; os restantes 20% usam os sensores
+fora desse conjunto quando existirem.
+
 ## 9. Analisar os ficheiros dos líderes
 
 Depois de parar o produtor ou de terminar o ensaio, executa o verificador na

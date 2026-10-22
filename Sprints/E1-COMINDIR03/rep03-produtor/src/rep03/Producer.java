@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 public class Producer {
     static final String API = "http://127.0.0.1:5001/api/v0"; // API por omissao
-    private static final long RAJADA_QUENTE_DELAY_MS = 0; // for debug purposes, 0 otherwise
+    private static final long RAJADA_QUENTE_DELAY_MS = 2; // for debug purposes, 0 otherwise
 
     public static void main(String[] args) throws Exception {
         Properties config = RuntimeConfig.load();
@@ -39,7 +39,7 @@ public class Producer {
                 }
 
                 // rajada <n> <s>: publica n leituras, o mais depressa possivel, com sensores aleatorios entre S01 e S<s>
-                // rajada-quente <n> <s>: igual, mas 80 % das leituras vem de S01 (chave quente)
+                // rajada-quente <n> <s>: igual, mas 80 % percorre um conjunto quente de sensores
                 boolean quente = line.toLowerCase().startsWith("rajada-quente ");
                 if (quente || line.toLowerCase().startsWith("rajada ")) {
                     String[] parts = line.split("\\s+");
@@ -59,7 +59,7 @@ public class Producer {
                         long tFim = tInicio;
                         for (int i = 0; i < nLeituras; i++) {
                             String sensor = quente
-                                    ? sensorQuente(rand, s)
+                                    ? sensorQuente(rand, s, i)
                                     : String.format("S%02d", rand.nextInt(s) + 1); // sensor aleaterio
                             double temp = Math.round((15.0 + 15.0 * rand.nextDouble()) * 10.0) / 10.0; // temperatura aleatoria entre 15 e 30
                             publicar(pubsub, partitioner, contadores, sensor, temp);
@@ -108,11 +108,16 @@ public class Producer {
         System.out.println("Publicado: " + Wire.in(sensor, temp, 0, new VectorClock(pt.count())) + " -> p" + k);
     }
 
-    // sensor de uma leitura de rajada-quente: 80 % vem de S01, o resto de S02 a S<s>
-    static String sensorQuente(Random rand, int s) {
-        if (s >= 2 && rand.nextDouble() >= 0.8) {
-            return String.format("S%02d", rand.nextInt(s - 1) + 2);
+    // 80 % das leituras percorrem S01..S03 para distribuir os alarmes pelas particoes.
+    static String sensorQuente(Random rand, int s, int indice) {
+        int tamanhoConjuntoQuente = Math.min(s, 3);
+        if (rand.nextDouble() < 0.8) {
+            return String.format("S%02d", (indice % tamanhoConjuntoQuente) + 1);
         }
-        return "S01";
+        if (s > tamanhoConjuntoQuente) {
+            return String.format("S%02d",
+                    rand.nextInt(s - tamanhoConjuntoQuente) + tamanhoConjuntoQuente + 1);
+        }
+        return String.format("S%02d", (indice % tamanhoConjuntoQuente) + 1);
     }
 }
