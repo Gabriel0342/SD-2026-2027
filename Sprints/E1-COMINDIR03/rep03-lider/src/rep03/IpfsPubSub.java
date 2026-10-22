@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 public class IpfsPubSub {
     private final String api; // ex.: http://127.0.0.1:5001/api/v0
-    private final HttpClient http = HttpClient.newHttpClient();
+    private static final HttpClient http = HttpClient.newHttpClient();
 
     public IpfsPubSub(String api) {
         this.api = api;
@@ -72,5 +72,3 @@ public class IpfsPubSub {
         return json.substring(start, json.indexOf('"', start));
     }
 }
-
-

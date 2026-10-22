@@ -31,6 +31,8 @@ public class IpfsDaemon {
         connectNodes();
         System.out.println("Dois nós Kubo prontos: APIs em 127.0.0.1:"
                 + API_NODE_1 + " e 127.0.0.1:" + API_NODE_2 + ".");
+        // Keep this launcher alive while the application stack is running.
+        Thread.sleep(Long.MAX_VALUE);
     }
 
     private static void startDefaultNode() throws Exception {

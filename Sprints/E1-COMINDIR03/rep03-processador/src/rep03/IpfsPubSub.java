@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 
 public class IpfsPubSub {
     private final String api; // ex.: http://127.0.0.1:5001/api/v0
-    private final HttpClient http = HttpClient.newHttpClient();
+    private static final HttpClient http = HttpClient.newHttpClient();
 
     public IpfsPubSub(String api) {
         this.api = api;
@@ -45,7 +45,7 @@ public class IpfsPubSub {
                 .build();
         HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
         if (resp.statusCode() != 200) {
-            throw new IOException("pub falhou (" + resp.statusCode() + "): " + resp.body());
+            throw new IOException("pub falhou (" + resp.statusCode() + resp.body() + "): " + resp.body());
         }
     }
 
@@ -74,5 +74,3 @@ public class IpfsPubSub {
         return json.substring(start, json.indexOf('"', start));
     }
 }
-
-

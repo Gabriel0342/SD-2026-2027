@@ -6,6 +6,7 @@ import java.util.Scanner;
 
 public class Producer {
     static final String API = "http://127.0.0.1:5001/api/v0"; // API por omissao
+    private static final long RAJADA_QUENTE_DELAY_MS = 0; // for debug purposes, 0 otherwise
 
     public static void main(String[] args) throws Exception {
         Properties config = RuntimeConfig.load();
@@ -16,8 +17,8 @@ public class Producer {
         String api = args.length > 1 ? args[1] : RuntimeConfig.value(config, "producer.api", API);
         Partitioner partitioner = new Partitioner(n);
         IpfsPubSub pubsub = new IpfsPubSub(api);
-        Random rand = new Random();              // sensores e temperaturas aleatorias
-        int[] contadores = new int[n];           // leituras publicadas por particao
+        Random rand = new Random(); // sensores e temperaturas aleatorias
+        int[] contadores = new int[n]; // leituras publicadas por particao
 
         System.out.println("Produtor pronto (API: " + api + ", " + n + " particoes).");
         System.out.println("Formato: <sensor> <temperatura> | 'rajada <n> <s>' | 'rajada-quente <n> <s>' | 'sair'");
@@ -34,7 +35,7 @@ public class Producer {
                     break;
                 }
                 if (line.isEmpty()) {
-                    continue;         // ignora linhas vazias
+                    continue; // ignora linhas vazias
                 }
 
                 // rajada <n> <s>: publica n leituras, o mais depressa possivel, com sensores aleatorios entre S01 e S<s>
@@ -63,12 +64,16 @@ public class Producer {
                             double temp = Math.round((15.0 + 15.0 * rand.nextDouble()) * 10.0) / 10.0; // temperatura aleatoria entre 15 e 30
                             publicar(pubsub, partitioner, contadores, sensor, temp);
                             tFim = System.currentTimeMillis(); // instante da ultima publicacao
+                            if (quente && i + 1 < nLeituras) {
+                                Thread.sleep(RAJADA_QUENTE_DELAY_MS);
+                            }
                         }
                         System.out.println("Rajada concluida: " + nLeituras + " leituras.");
                         for (int k = 0; k < n; k++) {
                             System.out.println("p" + k + ": " + contadores[k] + " leituras");
                         }
-                        System.out.println("Primeira: " + tInicio + " ms | ultima: " + tFim + " ms | Duracao: " + (tFim - tInicio) + " ms");
+                        System.out.println("Primeira: " + tInicio + " ms | ultima: " + tFim + " ms | Duracao: "
+                                + (tFim - tInicio) + " ms");
                     } catch (NumberFormatException e) {
                         System.out.println("rajada: n e s tem de ser inteiros.");
                     }
@@ -111,4 +116,3 @@ public class Producer {
         return "S01";
     }
 }
-

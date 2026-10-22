@@ -57,7 +57,7 @@ final class RuntimeConfig {
             if (Files.isRegularFile(direct)) {
                 return direct;
             }
-            Path repository = root.resolve("Sprints/E1-COMINDIR02").resolve(FILE_NAME);
+            Path repository = root.resolve("Sprints/E1-COMINDIR03").resolve(FILE_NAME);
             if (Files.isRegularFile(repository)) {
                 return repository;
             }
