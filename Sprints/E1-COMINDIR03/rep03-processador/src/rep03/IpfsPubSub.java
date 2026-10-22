@@ -45,7 +45,10 @@ public class IpfsPubSub {
                 .build();
         HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
         if (resp.statusCode() != 200) {
-            throw new IOException("pub falhou (" + resp.statusCode() + resp.body() + "): " + resp.body());
+            throw new IOException("pub falhou: api=" + api
+                    + ", topic=" + topic
+                    + ", status=" + resp.statusCode()
+                    + ", body=" + resp.body());
         }
     }
 
