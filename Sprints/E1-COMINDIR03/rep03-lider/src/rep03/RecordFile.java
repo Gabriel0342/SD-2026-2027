@@ -2,6 +2,8 @@ package rep03;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,8 +17,25 @@ public class RecordFile {
 
     // acrescenta uma linha ao fim do ficheiro (cria-o se nao existir)
     public synchronized void append(SensorRecord r) throws IOException {
-        Files.writeString(path, r.toLine() + System.lineSeparator(), StandardCharsets.UTF_8,
-                StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        byte[] line = (r.toLine() + System.lineSeparator()).getBytes(StandardCharsets.UTF_8);
+        try (FileChannel channel = FileChannel.open(path, StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE)) {
+            long start = channel.size();
+            channel.position(start);
+            try {
+                ByteBuffer buffer = ByteBuffer.wrap(line);
+                while (buffer.hasRemaining()) channel.write(buffer);
+                channel.force(true);
+            } catch (IOException failure) {
+                try {
+                    channel.truncate(start);
+                    channel.force(true);
+                } catch (IOException rollbackFailure) {
+                    failure.addSuppressed(rollbackFailure);
+                }
+                throw failure;
+            }
+        }
     }
 
     // numero de sequencia do ultimo registo guardado (0 se o ficheiro nao existir)

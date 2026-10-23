@@ -3,6 +3,8 @@ package rep03;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class AlarmProcessor {
     private AlarmProcessor() {
@@ -36,6 +38,13 @@ public final class AlarmProcessor {
         private final VectorClock vp;
         // Keys in the form "<partition>-<sequence>" for already processed records.
         private final Set<String> seen;
+        // A single publisher preserves the order in which alarms leave the
+        // synchronized causal-state update, without blocking subscription threads.
+        private final ExecutorService alarmPublisher = Executors.newSingleThreadExecutor(r -> {
+            Thread thread = new Thread(r, "processador-alarmes");
+            thread.setDaemon(true);
+            return thread;
+        });
 
         /**
          * Creates the shared state used by all partition subscription threads.
@@ -111,22 +120,20 @@ public final class AlarmProcessor {
                         // Copy the vector before leaving the critical section:
                         // later records may mutate the processor's shared vector.
                         alarm = Wire.in(alarmSensor, record.getTemperature(), lp, vp.copy());
+                        final String finalAlarm = alarm;
+                        final int finalTarget = target;
+                        // Queue while holding the state lock so publication
+                        // follows the order in which causal snapshots are made.
+                        alarmPublisher.execute(() -> {
+                            try {
+                                new IpfsPubSub(api).publish(Wire.topicIn(finalTarget), finalAlarm);
+                                System.out.println("ALARME: " + record.getSensorId() + " p" + k
+                                        + "#" + record.getSeq() + " -> p" + finalTarget);
+                            } catch (Exception e) {
+                                System.out.println("Erro ao publicar o alarme: " + e.getMessage());
+                            }
+                        });
                     }
-                }
-                if (alarm != null) {
-                    final String finalAlarm = alarm;
-                    final int finalTarget = target;
-                    // Publishing uses a synchronous HTTP request, so do it in a
-                    // separate thread and keep the subscription callback responsive.
-                    new Thread(() -> {
-                        try {
-                            new IpfsPubSub(api).publish(Wire.topicIn(finalTarget), finalAlarm);
-                            System.out.println("ALARME: " + record.getSensorId() + " p" + k
-                                    + "#" + record.getSeq() + " -> p" + finalTarget);
-                        } catch (Exception e) {
-                            System.out.println("Erro ao publicar o alarme: " + e.getMessage());
-                        }
-                    }).start();
                 }
             } catch (Exception e) {
                 System.out.println("REJEITADO pelo processador: " + msg.trim() + " (" + e.getMessage() + ")");

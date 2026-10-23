@@ -37,7 +37,7 @@ public final class CausalCheck {
         for (int k = 0; k < n; k++) {
             Path path = folder.resolve("lider-p" + k + ".txt");
             if (!Files.exists(path)) {
-                continue;
+                throw new IOException("Ficheiro de particao em falta: " + path);
             }
             for (String line : Files.readAllLines(path, StandardCharsets.UTF_8)) {
                 if (line.isBlank()) continue;

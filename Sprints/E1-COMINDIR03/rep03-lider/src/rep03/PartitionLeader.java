@@ -80,15 +80,21 @@ public class PartitionLeader {
 
                         SensorRecord r;
                         synchronized (LOCK) {
-                            currentLamport = Math.max(currentLamport, recebidoL) + 1;
-                            currentVector.merge(recebidoV);
-                            currentVector.tick(k);
-                            long novoSeq = ++currentSeq;
-                            if (currentVector.get(k) != novoSeq) {
+                            long novoLamport = Math.max(currentLamport, recebidoL) + 1;
+                            VectorClock novoVector = currentVector.copy();
+                            novoVector.merge(recebidoV);
+                            novoVector.tick(k);
+                            long novoSeq = currentSeq + 1;
+                            if (novoVector.get(k) != novoSeq) {
                                 throw new IllegalStateException("V[" + k + "] != seq");
                             }
-                            r = SensorRecord.now(novoSeq, f[1], temp, currentLamport, currentVector.copy());
+                            r = SensorRecord.now(novoSeq, f[1], temp, novoLamport, novoVector.copy());
                             file.append(r);
+                            // Commit in-memory clocks only after the record is
+                            // durably appended; a failed append consumes no seq.
+                            currentLamport = novoLamport;
+                            currentVector = novoVector;
+                            currentSeq = novoSeq;
                         }
                         System.out.println("EVENTO: seq=" + r.getSeq() + " L=" + r.lamport + " V=" + r.vector);
                         ps.publish(Wire.topicData(k), Wire.reg(endereco, porto, r));
