@@ -1,8 +1,11 @@
 $ErrorActionPreference = 'Stop'
 
+# A pasta do script é a raiz do sprint, independentemente da pasta atual.
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projects = @('rep03-replica', 'rep03-lider', 'rep03-processador', 'rep03-produtor')
 
+# Compila cada projeto isoladamente para que as cópias partilhadas tenham
+# exatamente o classpath e o diretório de saída esperados na execução.
 foreach ($project in $projects) {
     $projectPath = Join-Path $root $project
     $outPath = Join-Path $projectPath 'out'
@@ -27,6 +30,8 @@ function Start-Terminal {
         [string]$Title
     )
 
+    # Cada componente fica numa janela própria, pois as subscrições são
+    # bloqueantes e o produtor precisa de uma consola interativa.
     $terminalCommand = "& { `$Host.UI.RawUI.WindowTitle = '$Title'; $Command }"
     Start-Process -FilePath 'powershell.exe' `
         -WorkingDirectory $WorkingDirectory `
@@ -34,6 +39,7 @@ function Start-Terminal {
 }
 
 $ipfsCommand = 'java IpfsDaemon.java'
+# O lançador prepara as duas APIs Kubo antes dos processos da aplicação.
 Start-Terminal -WorkingDirectory $root -Command $ipfsCommand -Title 'COMINDIR03 - IPFS'
 
 function Wait-ForIpfsApi {
@@ -42,6 +48,7 @@ function Wait-ForIpfsApi {
         [int]$TimeoutSeconds = 60
     )
 
+    # A aplicação só deve arrancar depois de ambas as APIs responderem.
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     do {
         try {
@@ -66,6 +73,7 @@ function Assert-PortFree {
         [int]$Port
     )
 
+    # Os líderes precisam dos três portos TCP de recuperação livres.
     $listeners = @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue)
     if ($listeners.Count -gt 0) {
         $processIds = ($listeners | Select-Object -ExpandProperty OwningProcess -Unique) -join ', '
@@ -73,12 +81,14 @@ function Assert-PortFree {
     }
 }
 
+# Validar os serviços externos e os portos antes de abrir terminais.
 Wait-ForIpfsApi -Port 5001
 Wait-ForIpfsApi -Port 5002
 Assert-PortFree -Port 7000
 Assert-PortFree -Port 7001
 Assert-PortFree -Port 7002
 
+# A ordem garante que réplicas/líderes existem antes do produtor e do processador.
 $replicaPath = Join-Path $root 'rep03-replica'
 Start-Terminal -WorkingDirectory $replicaPath -Command 'java -cp out rep03.PartitionReplica' -Title 'COMINDIR03 - Replica 0'
 Start-Terminal -WorkingDirectory $replicaPath -Command 'java -cp out rep03.PartitionReplica' -Title 'COMINDIR03 - Replica 1'

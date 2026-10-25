@@ -18,6 +18,13 @@ import java.util.TreeMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Réplica que subscreve uma ou mais partições e persiste REG em ordem de seq.
+ *
+ * Cada partição tem estado e retenção independentes: por isso a entrega local
+ * pode aplicar um alarme antes do evento de outra partição que lhe deu origem.
+ * A recuperação TCP corrige perdas/adiantamentos dentro da mesma partição.
+ */
 public class PartitionReplica {
 
     // propriedades da simulacao de perdas (-Dperda, -Ddescartar ou replica.perda,
@@ -110,6 +117,7 @@ public class PartitionReplica {
     // j+1, modulo 3; o primeiro id (0, 1, 2, ...) cujos ficheiros replica-<id>-p<k>.lock
     // nao estejam trancados por outra replica ainda viva; a tranca e libertada pelo SO
     // quando o processo morre
+    /** Reserva duas partições por réplica, garantindo fator de replicação dois. */
     static Atribuicao autoAtribuicao() throws IOException {
         for (int n = 0; n < 100; n++) { // limite de seguranca: 100 replicas vivas chega
             int[] ks = { n % 3, (n + 1) % 3 }; // tres particoes, fator de replicacao 2
@@ -190,7 +198,8 @@ public class PartitionReplica {
             }
         }
 
-        // regra de aplicacao da COMINDIR01, comum a rececao por PubSub e a recuperacao
+        // A regra é deliberadamente local: seq é contínuo dentro desta partição,
+        // mas não impõe entrega causal entre partições diferentes.
         private void aplicar(SensorRecord r, boolean recuperado) throws IOException {
             long seq = r.getSeq();
             if (seq <= ultimo || retidos.containsKey(seq)) { // ja escrito ou retido
@@ -206,7 +215,7 @@ public class PartitionReplica {
             }
         }
 
-        // escreve os retidos que passaram a estar em sequencia
+        /** Esvazia o prefixo retido assim que os seus predecessores aparecem. */
         private void escreverEmSequencia() throws IOException {
             while (!retidos.isEmpty() && retidos.firstKey() == ultimo + 1) {
                 SensorRecord r = retidos.remove(retidos.firstKey());
@@ -216,7 +225,7 @@ public class PartitionReplica {
             }
         }
 
-        // ligacao TCP ao lider: PEDIDO <de> <ate> e leitura dos registos ate FIM
+        /** Pede ao líder o intervalo em falta e reaplica-o pela ordem recebida. */
         private void recuperar() {
             long de = ultimo + 1;
             long ate = retidos.isEmpty() ? de - 1 : retidos.firstKey() - 1;
@@ -249,4 +258,3 @@ public class PartitionReplica {
         }
     }
 }
-

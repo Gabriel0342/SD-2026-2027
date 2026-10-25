@@ -2,6 +2,7 @@ package rep03;
 
 import java.time.LocalDateTime;
 
+/** Registo persistido e transportado com seq, dados e carimbos causais. */
 public class SensorRecord {
     private final long seq;
     private final String sensorId;
@@ -10,6 +11,7 @@ public class SensorRecord {
     public final long lamport;
     public final VectorClock vector;
 
+    /** Constrói um registo que já recebeu todos os seus carimbos. */
     public SensorRecord(long seq, String sensorId, double temperature, String timestamp,
                         long lamport, VectorClock vector) {
         this.seq = seq;
@@ -20,18 +22,20 @@ public class SensorRecord {
         this.vector = vector;
     }
 
+    /** Cria um registo usando o instante local atual. */
     public static SensorRecord now(long seq, String sensorId, double temperature,
                                    long lamport, VectorClock vector) {
         return new SensorRecord(seq, sensorId, temperature,
                 LocalDateTime.now().withNano(0).toString(), lamport, vector);
     }
 
-    // representacao textual: e o que se guarda no ficheiro e o que se envia pela rede
+    /** Formato único usado no ficheiro, PubSub e recuperação TCP. */
     public String toLine() {
         return seq + ";" + sensorId + ";" + temperature + ";" + timestamp
                 + ";" + lamport + ";" + vector;
     }
 
+    /** Faz o parsing e valida a dimensão do vetor recebido. */
     public static SensorRecord fromLine(String line, int n) {
         String[] f = line.trim().split(";");
         if (f.length != 6) {
@@ -48,4 +52,3 @@ public class SensorRecord {
     public double getTemperature() { return temperature; }
     public String getTimestamp() { return timestamp; }
 }
-

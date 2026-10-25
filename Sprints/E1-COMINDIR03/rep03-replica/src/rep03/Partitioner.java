@@ -1,8 +1,10 @@
 package rep03;
 
+/** Mapeia cada sensor para uma partição de forma determinística. */
 public final class Partitioner {
     private final int n;
 
+    /** Cria o mapeador e rejeita uma configuração sem partições. */
     public Partitioner(int n) {
         if (n < 1) {
             throw new IllegalArgumentException("numero de particoes invalido: " + n);
@@ -10,15 +12,18 @@ public final class Partitioner {
         this.n = n;
     }
 
-    // particao de um sensor: deterministica e igual em qualquer JVM
+    /**
+     * Calcula a partição do sensor. {@code floorMod} evita índices negativos
+     * mesmo quando o hash Java do identificador é negativo.
+     */
     public int of(String sensorId) {
         return Math.floorMod(sensorId.hashCode(), n);
     }
 
+    /** Devolve o número de partições, usado para dimensionar vetores. */
     public int count() {
         return n;
     }
 }
-
 
 

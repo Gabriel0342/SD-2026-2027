@@ -10,6 +10,7 @@ import java.util.Base64;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+/** Adaptador HTTP mínimo para publicação e subscrição PubSub do Kubo. */
 public class IpfsPubSub {
     private final String api; // ex.: http://127.0.0.1:5001/api/v0
     private static final HttpClient http = HttpClient.newHttpClient();
@@ -18,7 +19,7 @@ public class IpfsPubSub {
         this.api = api;
     }
 
-    // o Kubo exige o topico e os dados em multibase: base64url sem padding, com prefixo 'u'
+    /** Codifica texto no multibase base64url exigido pelo Kubo. */
     static String toMultibase(String s) {
         return "u" + Base64.getUrlEncoder().withoutPadding()
                 .encodeToString(s.getBytes(StandardCharsets.UTF_8));
@@ -31,7 +32,7 @@ public class IpfsPubSub {
         return new String(Base64.getUrlDecoder().decode(s.substring(1)), StandardCharsets.UTF_8);
     }
 
-    // publica uma mensagem no topico (a mensagem segue no corpo, como ficheiro multipart)
+    /** Publica uma mensagem multipart e valida a resposta HTTP. */
     public void publish(String topic, String message) throws IOException, InterruptedException {
         String boundary = "rep01-" + System.nanoTime();
         String body = "--" + boundary + "\r\n"
@@ -52,7 +53,7 @@ public class IpfsPubSub {
         }
     }
 
-    // subscreve o topico; NAO TERMINA: cada linha da resposta e uma mensagem JSON recebida
+    /** Mantém uma subscrição bloqueante e entrega cada payload ao callback. */
     public void subscribe(String topic, Consumer<String> onMessage) throws IOException, InterruptedException {
         HttpRequest req = HttpRequest.newBuilder(URI.create(api + "/pubsub/sub?arg=" + toMultibase(topic)))
                 .POST(HttpRequest.BodyPublishers.noBody())
@@ -66,7 +67,7 @@ public class IpfsPubSub {
                 .forEach(json -> onMessage.accept(fromMultibase(extractField(json, "data"))));
     }
 
-    // extracao minima de um campo de texto de um objeto JSON simples (evita bibliotecas externas)
+    /** Extrai o campo data do JSON simples do Kubo sem dependências externas. */
     static String extractField(String json, String field) {
         String key = "\"" + field + "\":\"";
         int start = json.indexOf(key);

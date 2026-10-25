@@ -10,11 +10,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
 
+/** Carrega a configuração comum, procurando-a no contexto de execução. */
+/** Localiza e carrega a configuração comum dos processos. */
 final class RuntimeConfig {
     private static final String FILE_NAME = "runtime.properties";
 
     private RuntimeConfig() { }
 
+    /** Localiza e lê {@code runtime.properties} em UTF-8. */
     static Properties load() throws IOException {
         Path file = findFile();
         Properties properties = new Properties();
@@ -24,6 +27,7 @@ final class RuntimeConfig {
         return properties;
     }
 
+    /** Obtém uma propriedade não vazia, com fallback explícito. */
     static String value(Properties properties, String key, String fallback) {
         String value = properties.getProperty(key, fallback).trim();
         if (value.isEmpty()) {
@@ -32,6 +36,7 @@ final class RuntimeConfig {
         return value;
     }
 
+    /** Procura primeiro o caminho explícito e depois diretórios ancestrais. */
     private static Path findFile() throws IOException {
         String explicitPath = System.getProperty("comindir03.config");
         if (explicitPath != null && !explicitPath.isBlank()) {
@@ -66,6 +71,7 @@ final class RuntimeConfig {
                 + "COMINDIR03 ou defina -Dcomindir03.config=<caminho>.");
     }
 
+    /** Adiciona um caminho e todos os seus pais sem alterar o sistema de ficheiros. */
     private static void addAncestors(List<Path> roots, Path path) {
         Path current = path.toAbsolutePath().normalize();
         while (current != null) {

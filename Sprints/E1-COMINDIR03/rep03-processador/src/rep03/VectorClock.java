@@ -2,11 +2,13 @@ package rep03;
 
 import java.util.Arrays;
 
+/** Relógio vetorial: cada componente representa o progresso causal de uma partição. */
 public final class VectorClock {
     public enum Order { BEFORE, AFTER, EQUAL, CONCURRENT }
 
     private final long[] v;
 
+    /** Cria um vetor de dimensão N, inicialmente zero. */
     public VectorClock(int n) {
         this.v = new long[n];
     }
@@ -15,14 +17,14 @@ public final class VectorClock {
         this.v = v;
     }
 
-    // máximo componente a componente com outro vetor
+    /** Funde contextos causais pelo máximo componente a componente. */
     public void merge(VectorClock other) {
         for (int i = 0; i < v.length; i++) {
             v[i] = Math.max(v[i], other.v[i]);
         }
     }
 
-    // evento local no processo k
+    /** Regista um evento local na partição k. */
     public void tick(int k) {
         v[k]++;
     }
@@ -35,7 +37,7 @@ public final class VectorClock {
         return new VectorClock(v.clone());
     }
 
-    // relação de this com other
+    /** Classifica a relação causal entre os dois vetores. */
     public Order compare(VectorClock other) {
         boolean menor = false, maior = false;
         for (int i = 0; i < v.length; i++) {
@@ -48,7 +50,7 @@ public final class VectorClock {
         return Order.EQUAL;
     }
 
-    // representação "v0,v1,...,vN-1"
+    /** Serializa o vetor para ficheiros e mensagens. */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -59,6 +61,7 @@ public final class VectorClock {
         return sb.toString();
     }
 
+    /** Reconstrói e valida um vetor, incluindo a sua dimensão. */
     public static VectorClock parse(String s, int n) {
         String[] f = s.trim().split(",");
         if (f.length != n) {

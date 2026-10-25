@@ -8,14 +8,16 @@ import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Persistência append-only dos registos de um líder e leitura de intervalos. */
 public class RecordFile {
     private final Path path;
 
+    /** Associa o objeto ao ficheiro local indicado. */
     public RecordFile(String fileName) {
         this.path = Paths.get(fileName);
     }
 
-    // acrescenta uma linha ao fim do ficheiro (cria-o se nao existir)
+    /** Acrescenta uma linha UTF-8 ao fim do ficheiro, criando-o se necessário. */
     public synchronized void append(SensorRecord r) throws IOException {
         byte[] line = (r.toLine() + System.lineSeparator()).getBytes(StandardCharsets.UTF_8);
         try (FileChannel channel = FileChannel.open(path, StandardOpenOption.CREATE,
@@ -38,7 +40,7 @@ public class RecordFile {
         }
     }
 
-    // numero de sequencia do ultimo registo guardado (0 se o ficheiro nao existir)
+    /** Obtém a última sequência, permitindo ao líder retomar após reinício. */
     public synchronized long lastSeq() throws IOException {
         if (!Files.exists(path)) {
             return 0;
@@ -53,6 +55,7 @@ public class RecordFile {
         return last;
     }
 
+    /** Lê o último registo completo, incluindo o vetor de dimensão N. */
     public synchronized SensorRecord last(int n) throws IOException {
         if (!Files.exists(path)) {
             return null;
@@ -65,7 +68,7 @@ public class RecordFile {
         }
         return last;
     }
-    // registos com from <= seq <= to, pela ordem do ficheiro (lista vazia se o ficheiro nao existir)
+    /** Seleciona o intervalo pedido por uma réplica, mantendo a ordem persistida. */
     public synchronized List<SensorRecord> range(long from, long to) throws IOException {
         List<SensorRecord> out = new ArrayList<>();
         if (!Files.exists(path)) {

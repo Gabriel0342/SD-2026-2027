@@ -4,10 +4,12 @@ import java.util.Random;
 import java.util.Properties;
 import java.util.Scanner;
 
+/** Interface de consola que publica leituras IN no tópico da sua partição. */
 public class Producer {
     static final String API = "http://127.0.0.1:5001/api/v0"; // API por omissao
     private static final long RAJADA_DELAY_MS = 6; // for debug purposes, 0 otherwise
 
+    /** Lê comandos, gera rajadas opcionais e termina com {@code sair}. */
     public static void main(String[] args) throws Exception {
         Properties config = RuntimeConfig.load();
         // numero de particoes e endereco da API: Producer <N> [api];
@@ -100,7 +102,10 @@ public class Producer {
         }
     }
 
-    // publica a leitura no topico de entrada da particao do sensor e assinala o destino
+    /**
+     * Publica uma leitura com L=0 e vetor zero: o produtor não é um líder nem
+     * cria eventos persistidos, logo não acrescenta uma componente causal.
+     */
     static void publicar(IpfsPubSub ps, Partitioner pt, int[] contadores, String sensor, double temp) throws Exception {
         int k = pt.of(sensor);
         ps.publish(Wire.topicIn(k), Wire.in(sensor, temp, 0, new VectorClock(pt.count())));
@@ -108,7 +113,7 @@ public class Producer {
         System.out.println("Publicado: " + Wire.in(sensor, temp, 0, new VectorClock(pt.count())) + " -> p" + k);
     }
 
-    // 80 % das leituras percorrem S01..S03 para distribuir os alarmes pelas particoes.
+    /** Concentra 80% das rajadas em S01..S03 para exercitar alarmes cruzados. */
     static String sensorQuente(Random rand, int s, int indice) {
         int tamanhoConjuntoQuente = Math.min(s, 3);
         if (rand.nextDouble() < 0.8) {

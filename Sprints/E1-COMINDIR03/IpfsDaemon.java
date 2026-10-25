@@ -13,6 +13,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Lançador dos dois nós Kubo locais usados pelo ensaio.
+ *
+ * O primeiro usa a configuração normal; o segundo recebe um repositório
+ * isolado, API 5002 e swarm 4002, e ambos são ligados antes da aplicação arrancar.
+ */
 public class IpfsDaemon {
     private static final String EXECUTABLE = System.getProperty("ipfs.executable", "ipfs");
     private static final int API_NODE_1 = 5001;
@@ -25,6 +31,7 @@ public class IpfsDaemon {
             .connectTimeout(Duration.ofSeconds(2))
             .build();
 
+    /** Garante os dois nós, liga-os e mantém o processo vivo. */
     public static void main(String[] args) throws Exception {
         startDefaultNode();
         startSecondNode();
@@ -35,6 +42,7 @@ public class IpfsDaemon {
         Thread.sleep(Long.MAX_VALUE);
     }
 
+    /** Reutiliza a API 5001 ou inicia o nó Kubo principal. */
     private static void startDefaultNode() throws Exception {
         if (apiIsUp(API_NODE_1)) {
             System.out.println("A reutilizar o nó Kubo existente na API " + API_NODE_1 + ".");
@@ -47,6 +55,7 @@ public class IpfsDaemon {
         waitForApi(API_NODE_1, node, "primeiro nó");
     }
 
+    /** Cria/configura o repositório independente e inicia a API 5002. */
     private static void startSecondNode() throws Exception {
         if (apiIsUp(API_NODE_2)) {
             System.out.println("A reutilizar o nó Kubo existente na API " + API_NODE_2 + ".");
@@ -71,6 +80,7 @@ public class IpfsDaemon {
         waitForApi(API_NODE_2, daemon, "segundo nó");
     }
 
+    /** Liga o segundo nó ao primeiro através do endereço swarm local. */
     private static void connectNodes() throws Exception {
         String peerId = getPeerId(API_NODE_1);
         String address = "/ip4/127.0.0.1/tcp/" + SWARM_NODE_1 + "/p2p/" + peerId;
@@ -89,6 +99,7 @@ public class IpfsDaemon {
         System.out.println("Ligacao entre os nos IPFS estabelecida.");
     }
 
+    /** Obtém o peer ID necessário para construir o endereço de ligação. */
     private static String getPeerId(int apiPort) throws Exception {
         URI uri = URI.create("http://127.0.0.1:" + apiPort + "/api/v0/id");
         HttpRequest request = HttpRequest.newBuilder(uri)
@@ -106,6 +117,7 @@ public class IpfsDaemon {
         return matcher.group(1);
     }
 
+    /** Testa se uma API Kubo responde sem esconder falhas de arranque. */
     private static boolean apiIsUp(int port) throws InterruptedException {
         try {
             URI uri = URI.create("http://127.0.0.1:" + port + "/api/v0/id");
@@ -119,6 +131,7 @@ public class IpfsDaemon {
         }
     }
 
+    /** Espera pela API, detetando também terminação prematura do processo. */
     private static void waitForApi(int port, Process process, String description) throws Exception {
         for (int i = 0; i < 30; i++) {
             if (apiIsUp(port)) {
@@ -133,6 +146,7 @@ public class IpfsDaemon {
         throw new IOException("O " + description + " nao respondeu na API " + port + " em 30 segundos.");
     }
 
+    /** Executa um comando Kubo no repositório indicado e valida o exit code. */
     private static void runIpfs(Path repo, String... arguments) throws Exception {
         List<String> command = new ArrayList<>();
         command.add(EXECUTABLE);

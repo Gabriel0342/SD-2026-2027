@@ -6,10 +6,17 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Observa todas as partições e transforma leituras quentes em novas IN.
+ *
+ * O processador é o elo causal entre partições: funde L/V dos REG observados,
+ * tira um snapshot e publica ALARM- no tópico da partição do sensor sintético.
+ */
 public final class AlarmProcessor {
     private AlarmProcessor() {
     }
 
+    /** Cria um processador com a configuração indicada e inicia as subscrições. */
     public static void main(String[] args) throws Exception {
         // Load the shared runtime configuration, allowing command-line arguments
         // to override the number of partitions and the IPFS API endpoint.
@@ -86,6 +93,7 @@ public final class AlarmProcessor {
             }
         }
 
+        /** Valida uma REG, elimina duplicados e agenda eventual alarme. */
         private void process(int k, String msg) {
             try {
                 // REG contains the leader metadata followed by the serialized

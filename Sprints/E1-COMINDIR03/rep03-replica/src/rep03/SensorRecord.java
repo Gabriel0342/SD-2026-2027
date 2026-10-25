@@ -2,6 +2,12 @@ package rep03;
 
 import java.time.LocalDateTime;
 
+/**
+ * Registo normalizado criado pelo líder e replicado para os seus seguidores.
+ *
+ * O mesmo formato é usado no ficheiro, no tópico PubSub e na recuperação TCP,
+ * incluindo os carimbos Lamport e vetorial que explicam a ordem causal.
+ */
 public class SensorRecord {
     private final long seq;
     private final String sensorId;
@@ -10,6 +16,7 @@ public class SensorRecord {
     public final long lamport;
     public final VectorClock vector;
 
+    /** Constrói um registo já completamente carimbado. */
     public SensorRecord(long seq, String sensorId, double temperature, String timestamp,
                         long lamport, VectorClock vector) {
         this.seq = seq;
@@ -20,18 +27,20 @@ public class SensorRecord {
         this.vector = vector;
     }
 
+    /** Cria um registo com o instante local, truncado a segundos para ser legível. */
     public static SensorRecord now(long seq, String sensorId, double temperature,
                                    long lamport, VectorClock vector) {
         return new SensorRecord(seq, sensorId, temperature,
                 LocalDateTime.now().withNano(0).toString(), lamport, vector);
     }
 
-    // representacao textual: e o que se guarda no ficheiro e o que se envia pela rede
+    /** Converte o registo para a linha delimitada persistida e transportada. */
     public String toLine() {
         return seq + ";" + sensorId + ";" + temperature + ";" + timestamp
                 + ";" + lamport + ";" + vector;
     }
 
+    /** Reconstrói um registo e valida a dimensão causal esperada. */
     public static SensorRecord fromLine(String line, int n) {
         String[] f = line.trim().split(";");
         if (f.length != 6) {
@@ -41,6 +50,7 @@ public class SensorRecord {
                 Long.parseLong(f[4]), VectorClock.parse(f[5], n));
     }
 
+    /** Variante compatível com os ficheiros da configuração predefinida (N=3). */
     public static SensorRecord fromLine(String line) { return fromLine(line, 3); }
 
     public long getSeq() { return seq; }
@@ -48,4 +58,3 @@ public class SensorRecord {
     public double getTemperature() { return temperature; }
     public String getTimestamp() { return timestamp; }
 }
-

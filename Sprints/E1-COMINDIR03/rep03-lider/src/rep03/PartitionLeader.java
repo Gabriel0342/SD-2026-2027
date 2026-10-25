@@ -7,6 +7,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Properties;
 
+/**
+ * Líder de uma partição: valida IN, atribui seq/L/V, persiste e publica REG.
+ *
+ * O mesmo processo expõe TCP para uma réplica recuperar um intervalo perdido.
+ * A réplica não altera relógios; apenas aplica os carimbos emitidos aqui.
+ */
 public class PartitionLeader {
 
     private static final Object LOCK = new Object();
@@ -14,6 +20,7 @@ public class PartitionLeader {
     private static VectorClock currentVector;
     private static long currentSeq;
 
+    /** Arranca o líder indicado e mantém as subscrições e recuperação ativas. */
     public static void main(String[] args) throws Exception {
 
         Properties config = RuntimeConfig.load();
@@ -55,6 +62,8 @@ public class PartitionLeader {
         IpfsPubSub ps = new IpfsPubSub(api);
         RecordFile file = new RecordFile("lider-p" + k + ".txt");
 
+        // Recuperar o último estado evita reutilizar seq e perder conhecimento
+        // causal quando o processo é reiniciado com o ficheiro existente.
         SensorRecord anterior = file.last(n);
         currentLamport = anterior == null ? 0 : anterior.lamport;
         currentVector = anterior == null ? new VectorClock(n) : anterior.vector.copy();
@@ -79,6 +88,8 @@ public class PartitionLeader {
                         VectorClock recebidoV = VectorClock.parse(f[4], n);
 
                         SensorRecord r;
+                        // L, V, seq e append formam um único commit lógico:
+                        // nenhuma mensagem concorrente pode observar estado parcial.
                         synchronized (LOCK) {
                             long novoLamport = Math.max(currentLamport, recebidoL) + 1;
                             VectorClock novoVector = currentVector.copy();
@@ -144,6 +155,7 @@ public class PartitionLeader {
                         continue; // fecha esta ligacao (try-with-resources) e volta ao accept
                     }
 
+                    // A recuperação só expõe o prefixo já confirmado em memória.
                     long ultimo;
                     synchronized (LOCK) {
                         ultimo = currentSeq;

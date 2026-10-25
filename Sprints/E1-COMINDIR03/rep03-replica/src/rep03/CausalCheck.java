@@ -9,9 +9,16 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Verificador offline dos invariantes causais dos ficheiros dos líderes.
+ *
+ * Além de validar V[k]=seq, compara vetores entre partições, conta relações
+ * causais/concorrentes e produz a vista total auxiliar ordenada por (L,k).
+ */
 public final class CausalCheck {
     private CausalCheck() { }
 
+    /** Liga o registo à partição que o produziu para excluir pares locais. */
     private static final class Entry {
         private final int partition;
         private final SensorRecord record;
@@ -25,6 +32,7 @@ public final class CausalCheck {
         SensorRecord record() { return record; }
     }
 
+    /** Lê os N ficheiros, gera o relatório causal e a vista Lamport. */
     public static void main(String[] args) throws Exception {
         if (args.length != 2) {
             throw new IllegalArgumentException("Uso: CausalCheck <N> <pasta>");
@@ -34,6 +42,7 @@ public final class CausalCheck {
         List<Entry> entries = new ArrayList<>();
         StringBuilder report = new StringBuilder();
         int invalidLocal = 0;
+        // A primeira passagem valida cada relógio local e recolhe todos os eventos.
         for (int k = 0; k < n; k++) {
             Path path = folder.resolve("lider-p" + k + ".txt");
             if (!Files.exists(path)) {
@@ -53,6 +62,7 @@ public final class CausalCheck {
 
         long before = 0, after = 0, concurrent = 0, equal = 0;
         long lamportViolations = 0, concurrentDifferentLamport = 0;
+        // A segunda passagem classifica apenas pares de partições diferentes.
         for (int i = 0; i < entries.size(); i++) {
             for (int j = i + 1; j < entries.size(); j++) {
                 Entry a = entries.get(i);
@@ -93,6 +103,8 @@ public final class CausalCheck {
 
         Files.writeString(folder.resolve("relatorio-causal.txt"), report.toString(),
                 StandardCharsets.UTF_8);
+        // (Lamport, partição, seq) é uma ordem total determinística; não afirma
+        // causalidade para eventos concorrentes, apenas os desempata.
         entries.sort(Comparator.comparingLong((Entry e) -> e.record.lamport)
                 .thenComparingInt(Entry::partition)
                 .thenComparingLong(e -> e.record.getSeq()));
