@@ -26,7 +26,7 @@ public class IpfsDaemon {
     private static final int SWARM_NODE_1 = 4001;
     private static final int SWARM_NODE_2 = 4002;
     private static final Path REPO_NODE_2 = Path.of(
-            System.getProperty("user.home"), ".ipfs-sd-comindir02-node2");
+            System.getProperty("user.home"), ".ipfs-sd-comindir04-node2");
     private static final HttpClient HTTP = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(2))
             .build();

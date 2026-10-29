@@ -1,10 +1,10 @@
-# Executar o COMINDIR03
+# Executar o COMINDIR04
 
 Estas instruções assumem Windows, PowerShell e Java instalado. Os comandos
 devem ser executados a partir da pasta:
 
 ```powershell
-cd C:\Users\hugoa\Desktop\SDt\SD-2026-2027\Sprints\E1-COMINDIR03
+cd C:\Projetos\SD-2026-2027\Sprints\E1-COMINDIR04
 ```
 
 O sistema usa três partições (`N = 3`) e dois nós Kubo/IPFS locais:
@@ -63,7 +63,22 @@ estiverem a executar.
 ## 3. Compilar os quatro projetos
 
 Executa todos os comandos de [compilação](./compiling.md). Cada projeto tem o
-seu próprio diretório `out\rep03` e deve ser compilado isoladamente.
+seu próprio diretório `out\rep04` e deve ser compilado isoladamente.
+
+Como alternativa, o lançador PowerShell compila e abre todos os terminais na
+ordem correta:
+
+```powershell
+.\executar.ps1
+```
+
+O script espera pelas APIs 5001/5002, verifica os portos TCP 7000--7002 e
+arranca réplicas, líderes, processador e produtor. Para limpar classes,
+trancas e ficheiros de ensaio depois de parar os processos:
+
+```powershell
+.\limpar.ps1
+```
 
 ## 4. Ordem de arranque
 
@@ -82,22 +97,22 @@ Abre três janelas PowerShell, uma por réplica. Sem argumentos, a atribuição 
 automática; cada réplica guarda duas partições:
 
 ```powershell
-cd C:\Users\hugoa\Desktop\SDt\SD-2026-2027\Sprints\E1-COMINDIR03\rep03-replica
-java -cp out rep03.PartitionReplica
+cd C:\Projetos\SD-2026-2027\Sprints\E1-COMINDIR04\rep04-replica
+java -cp out rep04.PartitionReplica
 ```
 
 Executa o comando em três janelas diferentes. Também podes fixar a atribuição:
 
 ```powershell
-java -cp out rep03.PartitionReplica R0 0,1
-java -cp out rep03.PartitionReplica R1 1,2
-java -cp out rep03.PartitionReplica R2 2,0
+java -cp out rep04.PartitionReplica R0 0,1
+java -cp out rep04.PartitionReplica R1 1,2
+java -cp out rep04.PartitionReplica R2 2,0
 ```
 
 O terceiro argumento opcional substitui o porto da API PubSub:
 
 ```powershell
-java -cp out rep03.PartitionReplica R0 0,1 5002
+java -cp out rep04.PartitionReplica R0 0,1 5002
 ```
 
 As réplicas escrevem ficheiros `replica-*-p*.txt` na sua pasta de execução.
@@ -107,16 +122,16 @@ As réplicas escrevem ficheiros `replica-*-p*.txt` na sua pasta de execução.
 Abre uma janela PowerShell por líder:
 
 ```powershell
-cd C:\Users\hugoa\Desktop\SDt\SD-2026-2027\Sprints\E1-COMINDIR03\rep03-lider
-java -cp out rep03.PartitionLeader 0
+cd C:\Projetos\SD-2026-2027\Sprints\E1-COMINDIR04\rep04-lider
+java -cp out rep04.PartitionLeader 0
 ```
 
 ```powershell
-java -cp out rep03.PartitionLeader 1
+java -cp out rep04.PartitionLeader 1
 ```
 
 ```powershell
-java -cp out rep03.PartitionLeader 2
+java -cp out rep04.PartitionLeader 2
 ```
 
 Os líderes escutam nos portos TCP `7000`, `7001` e `7002`. Cada líder
@@ -128,14 +143,14 @@ registo de `lider-p<k>.txt`.
 Numa nova janela PowerShell:
 
 ```powershell
-cd C:\Users\hugoa\Desktop\SDt\SD-2026-2027\Sprints\E1-COMINDIR03\rep03-processador
-java -cp out rep03.AlarmProcessor 3
+cd C:\Projetos\SD-2026-2027\Sprints\E1-COMINDIR04\rep04-processador
+java -cp out rep04.AlarmProcessor 3
 ```
 
 O segundo argumento opcional é a API PubSub:
 
 ```powershell
-java -cp out rep03.AlarmProcessor 3 http://127.0.0.1:5002/api/v0
+java -cp out rep04.AlarmProcessor 3 http://127.0.0.1:5002/api/v0
 ```
 
 O processador subscreve os três tópicos de dados e publica leituras
@@ -146,8 +161,8 @@ O processador subscreve os três tópicos de dados e publica leituras
 Numa última janela PowerShell:
 
 ```powershell
-cd C:\Users\hugoa\Desktop\SDt\SD-2026-2027\Sprints\E1-COMINDIR03\rep03-produtor
-java -cp out rep03.Producer
+cd C:\Projetos\SD-2026-2027\Sprints\E1-COMINDIR04\rep04-produtor
+java -cp out rep04.Producer
 ```
 
 Exemplos de comandos no prompt:
@@ -173,8 +188,8 @@ Depois de parar o produtor ou de terminar o ensaio, executa o verificador na
 pasta onde estão os ficheiros `lider-p*.txt`:
 
 ```powershell
-cd C:\Users\hugoa\Desktop\SDt\SD-2026-2027\Sprints\E1-COMINDIR03\rep03-replica
-java -cp out rep03.CausalCheck 3 C:\caminho\para\ficheiros
+cd C:\Projetos\SD-2026-2027\Sprints\E1-COMINDIR04\rep04-replica
+java -cp out rep04.CausalCheck 3 C:\caminho\para\ficheiros
 ```
 
 O comando verifica `V[k] == seq`, classifica os pares entre partições e cria:
@@ -182,13 +197,23 @@ O comando verifica `V[k] == seq`, classifica os pares entre partições e cria:
 - `relatorio-causal.txt`;
 - `vista-lamport.txt`.
 
+Para analisar os lotes, heartbeats e eventos dos detetores:
+
+```powershell
+java -cp out rep04.HeartbeatCheck 3 C:\Projetos\SD-2026-2027\Sprints\E1-COMINDIR04
+```
+
+O relatório usa os ficheiros `hb-p*.txt` dos líderes e `monitor-*.txt` dos
+participantes. Para um ensaio com falhas anotadas, acrescenta o nome do
+ficheiro, por exemplo `falhas.txt`, no mesmo diretório.
+
 ## 10. Simular perdas numa réplica
 
 Para descartar a primeira mensagem com sequência `5` e perder 20% das
 mensagens seguintes:
 
 ```powershell
-java -Ddescartar=5 -Dperda=0.2 -cp out rep03.PartitionReplica R3 0,1 5002
+java -Ddescartar=5 -Dperda=0.2 -cp out rep04.PartitionReplica R3 0,1 5002
 ```
 
 Quando existirem registos retidos, a réplica solicita ao líder os registos em

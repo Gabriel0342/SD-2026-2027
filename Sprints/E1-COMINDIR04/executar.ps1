@@ -2,7 +2,7 @@ $ErrorActionPreference = 'Stop'
 
 # A pasta do script é a raiz do sprint, independentemente da pasta atual.
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$projects = @('rep03-replica', 'rep03-lider', 'rep03-processador', 'rep03-produtor')
+$projects = @('rep04-replica', 'rep04-lider', 'rep04-processador', 'rep04-produtor')
 
 # Compila cada projeto isoladamente para que as cópias partilhadas tenham
 # exatamente o classpath e o diretório de saída esperados na execução.
@@ -13,7 +13,7 @@ foreach ($project in $projects) {
     New-Item -ItemType Directory -Force -Path $outPath | Out-Null
     Push-Location $projectPath
     try {
-        javac --release 11 -encoding UTF-8 -d out src\rep03\*.java
+        javac --release 11 -encoding UTF-8 -d out src\rep04\*.java
         if ($LASTEXITCODE -ne 0) {
             throw "A compilacao de $project falhou."
         }
@@ -40,7 +40,7 @@ function Start-Terminal {
 
 $ipfsCommand = 'java IpfsDaemon.java'
 # O lançador prepara as duas APIs Kubo antes dos processos da aplicação.
-Start-Terminal -WorkingDirectory $root -Command $ipfsCommand -Title 'COMINDIR03 - IPFS'
+Start-Terminal -WorkingDirectory $root -Command $ipfsCommand -Title 'COMINDIR04 - IPFS'
 
 function Wait-ForIpfsApi {
     param(
@@ -89,20 +89,20 @@ Assert-PortFree -Port 7001
 Assert-PortFree -Port 7002
 
 # A ordem garante que réplicas/líderes existem antes do produtor e do processador.
-$replicaPath = Join-Path $root 'rep03-replica'
-Start-Terminal -WorkingDirectory $replicaPath -Command 'java -cp out rep03.PartitionReplica' -Title 'COMINDIR03 - Replica 0'
-Start-Terminal -WorkingDirectory $replicaPath -Command 'java -cp out rep03.PartitionReplica' -Title 'COMINDIR03 - Replica 1'
-Start-Terminal -WorkingDirectory $replicaPath -Command 'java -cp out rep03.PartitionReplica' -Title 'COMINDIR03 - Replica 2'
+$replicaPath = Join-Path $root 'rep04-replica'
+Start-Terminal -WorkingDirectory $replicaPath -Command 'java -cp out rep04.PartitionReplica' -Title 'COMINDIR04 - Replica 0'
+Start-Terminal -WorkingDirectory $replicaPath -Command 'java -cp out rep04.PartitionReplica' -Title 'COMINDIR04 - Replica 1'
+Start-Terminal -WorkingDirectory $replicaPath -Command 'java -cp out rep04.PartitionReplica' -Title 'COMINDIR04 - Replica 2'
 
-$leaderPath = Join-Path $root 'rep03-lider'
-Start-Terminal -WorkingDirectory $leaderPath -Command 'java -cp out rep03.PartitionLeader 0' -Title 'COMINDIR03 - Leader p0'
-Start-Terminal -WorkingDirectory $leaderPath -Command 'java -cp out rep03.PartitionLeader 1' -Title 'COMINDIR03 - Leader p1'
-Start-Terminal -WorkingDirectory $leaderPath -Command 'java -cp out rep03.PartitionLeader 2' -Title 'COMINDIR03 - Leader p2'
+$leaderPath = Join-Path $root 'rep04-lider'
+Start-Terminal -WorkingDirectory $leaderPath -Command 'java -cp out rep04.PartitionLeader 0' -Title 'COMINDIR04 - Leader p0'
+Start-Terminal -WorkingDirectory $leaderPath -Command 'java -cp out rep04.PartitionLeader 1' -Title 'COMINDIR04 - Leader p1'
+Start-Terminal -WorkingDirectory $leaderPath -Command 'java -cp out rep04.PartitionLeader 2' -Title 'COMINDIR04 - Leader p2'
 
-$processorPath = Join-Path $root 'rep03-processador'
-Start-Terminal -WorkingDirectory $processorPath -Command 'java -cp out rep03.AlarmProcessor 3' -Title 'COMINDIR03 - Alarm Processor'
+$processorPath = Join-Path $root 'rep04-processador'
+Start-Terminal -WorkingDirectory $processorPath -Command 'java -cp out rep04.AlarmProcessor 3' -Title 'COMINDIR04 - Alarm Processor'
 
-$producerPath = Join-Path $root 'rep03-produtor'
-Start-Terminal -WorkingDirectory $producerPath -Command 'java -cp out rep03.Producer' -Title 'COMINDIR03 - Producer'
+$producerPath = Join-Path $root 'rep04-produtor'
+Start-Terminal -WorkingDirectory $producerPath -Command 'java -cp out rep04.Producer' -Title 'COMINDIR04 - Producer'
 
 Write-Host 'Compilacao concluida. Os terminais foram iniciados pela ordem definida.'
