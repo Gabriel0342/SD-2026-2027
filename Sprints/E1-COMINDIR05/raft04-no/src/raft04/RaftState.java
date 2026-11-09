@@ -19,8 +19,8 @@ public final class RaftState {
     private final Path file;
     private final Consumer<String> log;
     private final Set<Integer> votes = new HashSet<>();
-    private long term;
-    private int votedFor;
+    private long term; //persistência do termo
+    private int votedFor; //persistência do voto
     private long deadline;
     private Role role = Role.SEGUIDOR;
 
