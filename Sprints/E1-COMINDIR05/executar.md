@@ -10,7 +10,7 @@ cd "C:\Users\gugap\OneDrive\Ambiente de Trabalho\SD-2026-2027\Sprints\E1-COMINDI
 O script:
 
 1. compila os tres projetos;
-2. inicia o `IpfsDaemon` com as APIs `5001` e `5002`;
+2. compila e inicia o `IpfsDaemon` com as APIs `5001` e `5002`;
 3. verifica as portas de recuperacao `7100` a `7108`;
 4. inicia os nove nos, tres por particao;
 5. inicia o processador e o produtor.

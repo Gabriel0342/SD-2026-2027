@@ -27,9 +27,11 @@ function Start-Terminal {
         [string]$Command,
         [string]$Title
     )
-    $terminalCommand = "& { `$Host.UI.RawUI.WindowTitle = '$Title'; $Command }"
+    $terminalScript = "`$Host.UI.RawUI.WindowTitle = '$Title'; $Command"
+    $encodedCommand = [Convert]::ToBase64String(
+        [Text.Encoding]::Unicode.GetBytes($terminalScript))
     Start-Process -FilePath 'powershell.exe' -WorkingDirectory $WorkingDirectory `
-        -ArgumentList @('-NoExit', '-Command', $terminalCommand) | Out-Null
+        -ArgumentList @('-NoExit', '-EncodedCommand', $encodedCommand) | Out-Null
 }
 
 function Wait-ForPort {
@@ -61,9 +63,19 @@ Compile-Project $nodeProject
 Compile-Project $processorProject
 Compile-Project $producerProject
 
-# O processo inicia na raiz do sprint, por isso o caminho relativo evita
-# problemas de aspas quando o caminho absoluto contem espacos.
-Start-Terminal $root 'java -Dipfs.executable=.\ipfs.exe IpfsDaemon.java' 'COMINDIR05 - IPFS'
+# Compila o lancador na raiz. O comando da janela nova usa argumentos
+# explicitamente separados, evitando problemas com espacos no caminho.
+Push-Location $root
+try {
+    javac --release 11 -encoding UTF-8 -d . IpfsDaemon.java
+    if ($LASTEXITCODE -ne 0) {
+        throw 'A compilacao do IpfsDaemon falhou.'
+    }
+}
+finally {
+    Pop-Location
+}
+Start-Terminal $root "& java '-Dipfs.executable=.\ipfs.exe' -cp . IpfsDaemon" 'COMINDIR05 - IPFS'
 Wait-ForPort 5001
 Wait-ForPort 5002
 
