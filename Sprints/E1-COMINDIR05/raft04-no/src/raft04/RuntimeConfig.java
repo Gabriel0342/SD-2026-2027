@@ -12,12 +12,15 @@ import java.util.Properties;
 
 /** Localiza e carrega a configuracao comum dos processos. */
 final class RuntimeConfig {
+    // Todos os processos procuram a mesma configuracao para manter APIs e N
+    // consistentes durante um ensaio.
     private static final String FILE_NAME = "runtime.properties";
 
     private RuntimeConfig() { }
 
     /** Le runtime.properties em UTF-8. */
     static Properties load() throws IOException {
+        // A leitura explicita em UTF-8 evita depender da codificacao do sistema.
         Path file = findFile();
         Properties properties = new Properties();
         try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
@@ -28,6 +31,7 @@ final class RuntimeConfig {
 
     /** Obtem uma propriedade nao vazia, usando o fallback indicado. */
     static String value(Properties properties, String key, String fallback) {
+        // Valores vazios sao erros, mesmo quando a propriedade existe.
         String value = properties.getProperty(key, fallback).trim();
         if (value.isEmpty()) {
             throw new IllegalArgumentException("Configuracao vazia: " + key);
@@ -37,6 +41,8 @@ final class RuntimeConfig {
 
     /** Procura caminho explicito e depois diretorios ancestrais conhecidos. */
     private static Path findFile() throws IOException {
+        // Primeiro respeita um caminho fornecido por -Draft04.config; depois
+        // procura a partir da pasta atual e da localizacao das classes.
         String explicitPath = System.getProperty("raft04.config");
         if (explicitPath != null && !explicitPath.isBlank()) {
             Path file = Path.of(explicitPath).toAbsolutePath().normalize();
@@ -71,6 +77,7 @@ final class RuntimeConfig {
     }
 
     private static void addAncestors(List<Path> roots, Path path) {
+        // Adiciona a pasta indicada e todos os seus pais para localizar o sprint.
         Path current = path.toAbsolutePath().normalize();
         while (current != null) {
             roots.add(current);

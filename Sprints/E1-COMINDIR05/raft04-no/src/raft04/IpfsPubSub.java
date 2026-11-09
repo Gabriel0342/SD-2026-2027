@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 /** Adaptador HTTP minimo para publicacao e subscricao PubSub do Kubo. */
 public class IpfsPubSub {
+    // Adaptador comum entre o codigo Java e a API HTTP PubSub do Kubo.
     private final String api; // ex.: http://127.0.0.1:5001/api/v0
     private static final HttpClient http = HttpClient.newHttpClient();
 
@@ -19,11 +20,13 @@ public class IpfsPubSub {
 
     /** Codifica texto no multibase base64url exigido pelo Kubo. */
     static String toMultibase(String s) {
+        // O Kubo espera o topico codificado em multibase base64url.
         return "u" + Base64.getUrlEncoder().withoutPadding()
                 .encodeToString(s.getBytes(StandardCharsets.UTF_8));
     }
 
     static String fromMultibase(String s) {
+        // Converte o payload recebido de volta para texto UTF-8.
         if (!s.startsWith("u")) {
             throw new IllegalArgumentException("Codificacao multibase nao suportada: " + s);
         }
@@ -32,6 +35,7 @@ public class IpfsPubSub {
 
     /** Publica uma mensagem multipart e valida a resposta HTTP. */
     public void publish(String topic, String message) throws IOException, InterruptedException {
+        // Publica o corpo como multipart/form-data no endpoint pubsub/pub.
         String boundary = "rep01-" + System.nanoTime();
         String body = "--" + boundary + "\r\n"
                 + "Content-Disposition: form-data; name=\"file\"; filename=\"msg\"\r\n"
@@ -53,6 +57,7 @@ public class IpfsPubSub {
 
     /** Mantem uma subscricao bloqueante e entrega cada payload ao callback. */
     public void subscribe(String topic, Consumer<String> onMessage) throws IOException, InterruptedException {
+        // A subscricao permanece bloqueada e chama o callback para cada mensagem.
         HttpRequest req = HttpRequest.newBuilder(URI.create(api + "/pubsub/sub?arg=" + toMultibase(topic)))
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
@@ -76,4 +81,3 @@ public class IpfsPubSub {
         return json.substring(start, json.indexOf('"', start));
     }
 }
-

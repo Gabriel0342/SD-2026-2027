@@ -1,5 +1,6 @@
 package raft04;
 
+/** Resposta de um no a um pedido de voto. */
 public final class VoteReply {
     private final long term;
     private final int candidate;
@@ -16,10 +17,12 @@ public final class VoteReply {
     public boolean granted() { return granted; }
 
     public String encode() {
+        // A resposta identifica o candidato e o no que votou.
         return "VOTO;" + term + ";" + candidate + ";" + voter + ";" + granted;
     }
 
     public static VoteReply decode(String text) {
+        // A validacao impede que uma mensagem mal formada entre na eleicao.
         String[] f = text.trim().split(";", -1);
         if (f.length != 5 || !"VOTO".equals(f[0])) {
             throw new IllegalArgumentException("VOTO mal formado");

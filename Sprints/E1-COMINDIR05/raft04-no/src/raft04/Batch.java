@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Heartbeat and the records closed during one leader period. */
+/** Lote de dados e heartbeat emitido pelo lider da particao. */
 public final class Batch {
     public final String address;
     public final int port;
@@ -29,6 +29,8 @@ public final class Batch {
     }
 
     public String encode() {
+        // O cabecalho transporta termo, lider e progresso; as linhas seguintes
+        // contem os registos novos incluidos neste lote.
         StringBuilder out = new StringBuilder()
                 .append("LOTE;").append(term).append(';').append(leader).append(';')
                 .append(address).append(';').append(port).append(';').append(hb)
@@ -45,6 +47,7 @@ public final class Batch {
     }
 
     public static Batch decode(String message, int n) {
+        // A contagem declarada no cabecalho e validada antes de aceitar dados.
         String[] lines = message.trim().split("\\R", -1);
         String[] header = lines[0].split(";", -1);
         if (header.length != 9 || !"LOTE".equals(header[0])) {

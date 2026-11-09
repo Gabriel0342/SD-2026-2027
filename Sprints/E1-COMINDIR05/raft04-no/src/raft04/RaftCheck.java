@@ -15,6 +15,8 @@ public final class RaftCheck {
         int n = Integer.parseInt(args[0]);
         Path root = Paths.get(args[1]);
         StringBuilder report = new StringBuilder("RaftCheck\n");
+        // Agrupa os eventos LIDER por particao e termo para procurar
+        // violacoes da propriedade de no maximo um lider por termo.
         for (int k = 0; k < n; k++) {
             Map<Long, List<String>> leaders = new TreeMap<>();
             for (int i = 0; i < Wire.GRUPO; i++) {
@@ -40,6 +42,7 @@ public final class RaftCheck {
     }
 
     private static long fieldLong(String line, String field) {
+        // Extrai um campo do formato textual dos eventos, por exemplo termo=4.
         int start = line.indexOf(field + "=");
         if (start < 0) return -1;
         start += field.length() + 1;

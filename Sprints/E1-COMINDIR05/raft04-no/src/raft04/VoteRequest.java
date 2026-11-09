@@ -1,5 +1,6 @@
 package raft04;
 
+/** Pedido de voto com o termo e o progresso do candidato. */
 public final class VoteRequest {
     private final long term;
     private final int candidate;
@@ -16,10 +17,12 @@ public final class VoteRequest {
     public long lastTerm() { return lastTerm; }
 
     public String encode() {
+        // Mensagem publicada no topico de eleicao.
         return "PEDIDO_VOTO;" + term + ";" + candidate + ";" + lastSeq + ";" + lastTerm;
     }
 
     public static VoteRequest decode(String text) {
+        // Rejeita mensagens com tipo, numero de campos ou numeros invalidos.
         String[] f = text.trim().split(";", -1);
         if (f.length != 5 || !"PEDIDO_VOTO".equals(f[0])) {
             throw new IllegalArgumentException("PEDIDO_VOTO mal formado");

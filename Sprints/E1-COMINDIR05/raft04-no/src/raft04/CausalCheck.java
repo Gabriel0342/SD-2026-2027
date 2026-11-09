@@ -15,6 +15,7 @@ public final class CausalCheck {
         int n = Integer.parseInt(args[0]);
         Path root = Paths.get(args[1]);
         int errors = 0;
+        // Cada ficheiro de um no deve apresentar seq desde 1 sem saltos.
         for (int k = 0; k < n; k++) {
             for (int i = 0; i < Wire.GRUPO; i++) {
                 Path path = root.resolve("no-p" + k + "-n" + i + ".txt");

@@ -11,12 +11,15 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Le e grava os registos duraveis de uma particao. */
 public class RecordFile {
     private final Path path;
 
     public RecordFile(String fileName) { path = Paths.get(fileName); }
 
     public synchronized void append(SensorRecord record) throws IOException {
+        // A escrita e forçada para disco; se falhar, o ficheiro volta ao
+        // tamanho anterior para nao deixar uma linha parcial.
         byte[] line = (record.toLine() + System.lineSeparator()).getBytes(StandardCharsets.UTF_8);
         try (FileChannel channel = FileChannel.open(path, StandardOpenOption.CREATE,
                 StandardOpenOption.WRITE)) {
@@ -36,6 +39,8 @@ public class RecordFile {
 
     public synchronized void appendHeartbeat(long inc, long hb, long instant, long lastSeq,
                                              int count, int bytes) throws IOException {
+        // Heartbeats sao guardados separadamente para permitir medir a
+        // atividade e a indisponibilidade durante os ensaios.
         Path heartbeat = Paths.get("hb-p" + partitionFromName(path.getFileName().toString()) + ".txt");
         Files.writeString(heartbeat, inc + ";" + hb + ";" + instant + ";" + lastSeq + ";"
                         + count + ";" + bytes + System.lineSeparator(),
@@ -61,6 +66,7 @@ public class RecordFile {
     }
 
     public synchronized SensorRecord last(int n) throws IOException {
+        // O ultimo registo reconstrói seq, Lamport e o vetor causal no arranque.
         if (!Files.exists(path)) return null;
         SensorRecord last = null;
         for (String line : Files.readAllLines(path, StandardCharsets.UTF_8)) {
@@ -70,6 +76,7 @@ public class RecordFile {
     }
 
     public synchronized List<SensorRecord> range(long from, long to) throws IOException {
+        // A gama e usada por um no atrasado para recuperar registos em falta.
         List<SensorRecord> result = new ArrayList<>();
         if (!Files.exists(path)) return result;
         for (String line : Files.readAllLines(path, StandardCharsets.UTF_8)) {
@@ -81,4 +88,3 @@ public class RecordFile {
         return result;
     }
 }
-

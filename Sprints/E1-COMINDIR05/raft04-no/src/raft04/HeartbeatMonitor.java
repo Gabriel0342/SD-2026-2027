@@ -2,6 +2,7 @@ package raft04;
 
 import java.util.function.Consumer;
 
+/** Deteta silencio, perdas e reinicios do contador de heartbeats. */
 public final class HeartbeatMonitor {
     public enum State { DESCONHECIDO, ATIVO, SUSPEITO }
     private final int partition;
@@ -13,12 +14,14 @@ public final class HeartbeatMonitor {
     private long hb;
 
     public HeartbeatMonitor(int partition, long periodMs, int factor, Consumer<String> log) {
+        // O timeout e um multiplo do periodo normal dos heartbeats.
         this.partition = partition;
         this.timeoutNanos = periodMs * factor * 1_000_000L;
         this.log = log;
     }
 
     public synchronized void onHeartbeat(long newInc, long newHb) {
+        // Ignora mensagens antigas ou repetidas e regista saltos no contador.
         if (newInc < inc || (newInc == inc && newHb <= hb)) return;
         if (inc != -1 && newInc != inc) log.accept("REINICIO;p" + partition + ";inc=" + inc + "->" + newInc);
         else if (newInc == inc && newHb != hb + 1)
@@ -28,6 +31,7 @@ public final class HeartbeatMonitor {
     }
 
     public synchronized void check() {
+        // A falta de heartbeat durante o timeout coloca a particao sob suspeita.
         long elapsed = System.nanoTime() - lastNanos;
         if (state != State.SUSPEITO && elapsed > timeoutNanos) {
             state = State.SUSPEITO;
@@ -37,4 +41,3 @@ public final class HeartbeatMonitor {
 
     public synchronized State state() { return state; }
 }
-
