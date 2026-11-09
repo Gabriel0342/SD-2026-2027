@@ -10,13 +10,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
 
-/** Localiza e carrega a configuraÃ§Ã£o comum dos processos. */
+/** Localiza e carrega a configuracao comum dos processos. */
 final class RuntimeConfig {
     private static final String FILE_NAME = "runtime.properties";
 
     private RuntimeConfig() { }
 
-    /** LÃª runtime.properties em UTF-8. */
+    /** Le runtime.properties em UTF-8. */
     static Properties load() throws IOException {
         Path file = findFile();
         Properties properties = new Properties();
@@ -26,7 +26,7 @@ final class RuntimeConfig {
         return properties;
     }
 
-    /** ObtÃ©m uma propriedade nÃ£o vazia, usando o fallback indicado. */
+    /** Obtem uma propriedade nao vazia, usando o fallback indicado. */
     static String value(Properties properties, String key, String fallback) {
         String value = properties.getProperty(key, fallback).trim();
         if (value.isEmpty()) {
@@ -35,7 +35,7 @@ final class RuntimeConfig {
         return value;
     }
 
-    /** Procura caminho explÃ­cito e depois diretÃ³rios ancestrais conhecidos. */
+    /** Procura caminho explicito e depois diretorios ancestrais conhecidos. */
     private static Path findFile() throws IOException {
         String explicitPath = System.getProperty("raft04.config");
         if (explicitPath != null && !explicitPath.isBlank()) {

@@ -10,7 +10,7 @@ public class SensorRecord {
     public final long lamport;
     public final VectorClock vector;
 
-    /** ConstrÃ³i um registo que jÃ¡ recebeu todos os seus carimbos. */
+    /** Constroi um registo que ja recebeu todos os seus carimbos. */
     public SensorRecord(long seq, long term, String sensorId, double temperature, String timestamp,
                         long lamport, VectorClock vector) {
         this.seq = seq;
@@ -27,7 +27,7 @@ public class SensorRecord {
         this(seq, 0, sensorId, temperature, timestamp, lamport, vector);
     }
 
-    /** Cria um registo com milissegundos para permitir medir a latÃªncia do lote. */
+    /** Cria um registo com milissegundos para permitir medir a latencia do lote. */
     public static SensorRecord now(long seq, String sensorId, double temperature,
                                    long lamport, VectorClock vector) {
         return new SensorRecord(seq, 0, sensorId, temperature,
@@ -40,13 +40,13 @@ public class SensorRecord {
                 Long.toString(System.currentTimeMillis()), lamport, vector);
     }
 
-    /** Formato Ãºnico usado no ficheiro, PubSub e recuperaÃ§Ã£o TCP. */
+    /** Formato unico usado no ficheiro, PubSub e recuperacao TCP. */
     public String toLine() {
         return seq + ";" + term + ";" + sensorId + ";" + temperature + ";" + timestamp
                 + ";" + lamport + ";" + vector;
     }
 
-    /** Faz o parsing e valida a dimensÃ£o do vetor recebido. */
+    /** Faz o parsing e valida a dimensao do vetor recebido. */
     public static SensorRecord fromLine(String line, int n) {
         String[] f = line.trim().split(";");
         if (f.length != 7) {

@@ -8,7 +8,7 @@ import java.util.Base64;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-/** Adaptador HTTP mÃ­nimo para publicaÃ§Ã£o e subscriÃ§Ã£o PubSub do Kubo. */
+/** Adaptador HTTP minimo para publicacao e subscricao PubSub do Kubo. */
 public class IpfsPubSub {
     private final String api; // ex.: http://127.0.0.1:5001/api/v0
     private static final HttpClient http = HttpClient.newHttpClient();
@@ -51,7 +51,7 @@ public class IpfsPubSub {
         }
     }
 
-    /** MantÃ©m uma subscriÃ§Ã£o bloqueante e entrega cada payload ao callback. */
+    /** Mantem uma subscricao bloqueante e entrega cada payload ao callback. */
     public void subscribe(String topic, Consumer<String> onMessage) throws IOException, InterruptedException {
         HttpRequest req = HttpRequest.newBuilder(URI.create(api + "/pubsub/sub?arg=" + toMultibase(topic)))
                 .POST(HttpRequest.BodyPublishers.noBody())
@@ -65,7 +65,7 @@ public class IpfsPubSub {
                 .forEach(json -> onMessage.accept(fromMultibase(extractField(json, "data"))));
     }
 
-    /** Extrai o campo data do JSON simples do Kubo sem dependÃªncias externas. */
+    /** Extrai o campo data do JSON simples do Kubo sem dependencias externas. */
     static String extractField(String json, String field) {
         String key = "\"" + field + "\":\"";
         int start = json.indexOf(key);

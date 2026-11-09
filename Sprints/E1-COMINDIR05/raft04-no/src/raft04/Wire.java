@@ -1,6 +1,6 @@
 package raft04;
 
-/** Contrato textual de tÃ³picos e mensagens entre os processos. */
+/** Contrato textual de topicos e mensagens entre os processos. */
 public final class Wire {
     public static final double LIMIAR_ALARME = 28.0;
     public static final int LIMITE_RETIDOS = 10;   // acima deste numero de retidos, a replica recupera
@@ -17,9 +17,9 @@ public final class Wire {
 
     private Wire() { }
 
-    /** TÃ³pico de entradas destinado Ã  partiÃ§Ã£o k. */
+    /** Topico de entradas destinado a particao k. */
     public static String topicIn(int k)   { return "raft04-in-p" + k; }
-    /** TÃ³pico de LOTEs e heartbeats emitidos pelo lÃ­der da partiÃ§Ã£o k. */
+    /** Topico de LOTEs e heartbeats emitidos pelo lider da particao k. */
     public static String topicData(int k) { return "raft04-p" + k; }
     public static String topicElection(int k) { return "raft04-eleicao-p" + k; }
     public static int nodePort(int k, int i) { return 7100 + k * GRUPO + i; }
@@ -31,7 +31,7 @@ public final class Wire {
         return "IN;" + sensor + ";" + temp + ";" + lamport + ";" + vector;
     }
 
-    /** ObtÃ©m e valida o tipo textual da mensagem. */
+    /** Obtem e valida o tipo textual da mensagem. */
     public static String type(String msg) {
         String m = msg.trim();
         int i = m.indexOf(';');
@@ -41,7 +41,7 @@ public final class Wire {
         return m.substring(0, i);
     }
 
-    /** ObtÃ©m o corpo depois do primeiro ponto e vÃ­rgula. */
+    /** Obtem o corpo depois do primeiro ponto e virgula. */
     public static String body(String msg) {
         String m = msg.trim();
         return m.substring(m.indexOf(';') + 1);

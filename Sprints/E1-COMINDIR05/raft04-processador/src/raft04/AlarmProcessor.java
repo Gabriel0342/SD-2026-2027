@@ -12,16 +12,16 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Observa todas as partiÃ§Ãµes e transforma leituras quentes em novas IN.
+ * Observa todas as particoes e transforma leituras quentes em novas IN.
  *
- * O processador Ã© o elo causal entre partiÃ§Ãµes: funde L/V dos LOTEs observados,
- * tira um snapshot e publica ALARM- no tÃ³pico da partiÃ§Ã£o do sensor sintÃ©tico.
+ * O processador e o elo causal entre particoes: funde L/V dos LOTEs observados,
+ * tira um snapshot e publica ALARM- no topico da particao do sensor sintetico.
  */
 public final class AlarmProcessor {
     private AlarmProcessor() {
     }
 
-    /** Cria um processador com a configuraÃ§Ã£o indicada e inicia as subscriÃ§Ãµes. */
+    /** Cria um processador com a configuracao indicada e inicia as subscricoes. */
     public static void main(String[] args) throws Exception {
         // Load the shared runtime configuration, allowing command-line arguments
         // to override the number of partitions and the IPFS API endpoint.
@@ -149,7 +149,7 @@ public final class AlarmProcessor {
                             alarmPublisher.execute(() -> {
                             try {
                                 if (monitors[finalTarget].state() == HeartbeatMonitor.State.SUSPEITO) {
-                                    System.out.println("AVISO: lÃ­der p" + finalTarget
+                                    System.out.println("AVISO: lider p" + finalTarget
                                             + " suspeito; alarme " + record.getSensorId() + " pode perder-se");
                                 }
                                 new IpfsPubSub(api).publish(Wire.topicIn(finalTarget), finalAlarm);

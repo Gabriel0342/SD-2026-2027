@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 
-/** Confirma que as sequências de cada ficheiro não têm buracos ou regressões. */
+/** Confirma que as sequencias de cada ficheiro nao tem buracos ou regressoes. */
 public final class CausalCheck {
     private CausalCheck() { }
 
@@ -27,7 +27,7 @@ public final class CausalCheck {
                 }
             }
         }
-        System.out.println("CausalCheck: " + (errors == 0 ? "OK" : errors + " inconsistências"));
+        System.out.println("CausalCheck: " + (errors == 0 ? "OK" : errors + " inconsistencias"));
         if (errors != 0) System.exit(1);
     }
 }

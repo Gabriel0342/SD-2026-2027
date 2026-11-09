@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 
-/** Verificação pós-ensaio da segurança dos termos e das eleições. */
+/** Verificacao pos-ensaio da seguranca dos termos e das eleicoes. */
 public final class RaftCheck {
     private RaftCheck() { }
 

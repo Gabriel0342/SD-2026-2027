@@ -11,8 +11,8 @@ import java.util.Properties;
 import java.util.concurrent.*;
 
 /**
- * Nó Raft de uma partição. A eleição usa o tópico dedicado; os lotes continuam
- * a ser a unidade de replicação e de heartbeat.
+ * No Raft de uma particao. A eleicao usa um topico dedicado; os lotes
+ * continuam a ser a unidade de replicacao e de heartbeat.
  */
 public final class PartitionNode {
     private final int partition;
@@ -46,7 +46,7 @@ public final class PartitionNode {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2) throw new IllegalArgumentException(
-                "Uso: PartitionNode <partição> <nó> [N]");
+                "Uso: PartitionNode <particao> <no> [N]");
         Properties config = RuntimeConfig.load();
         int n = args.length > 2 ? Integer.parseInt(args[2])
                 : Integer.parseInt(RuntimeConfig.value(config, "partitions", "3"));
@@ -104,6 +104,7 @@ public final class PartitionNode {
                         }
                     } else if (message.startsWith("VOTO;")) {
                         VoteReply reply = VoteReply.decode(message);
+                        // So o candidato destinatario pode contar esta resposta.
                         if (reply.candidate() == self && state.receive(reply)) becomeLeader();
                     }
                 } catch (RuntimeException e) { event("ERRO;p" + partition + ";voto=" + e.getMessage()); }
@@ -117,6 +118,8 @@ public final class PartitionNode {
             String[] f = message.trim().split(";", -1);
             if (f.length != 5 || !"IN".equals(f[0]) || partitioner.of(f[1]) != partition) return;
             synchronized (lock) {
+                // A sequencia, o relogio de Lamport e o vetor causal sao
+                // atualizados juntos para evitar estados parcialmente visiveis.
                 long currentTerm = state.leaderTerm();
                 if (currentTerm < 0) { event("IGNORADO;p" + partition + ";motivo=sem-lider"); return; }
                 VectorClock next = vector.copy(); next.merge(VectorClock.parse(f[4], n));
@@ -135,6 +138,8 @@ public final class PartitionNode {
             Batch batch = Batch.decode(message, n);
             if (batch.leader == self || !state.acceptBatch(batch.term, batch.leader)) return;
             synchronized (lock) {
+                // O seguidor so acrescenta registos posteriores ao seu ultimo
+                // registo conhecido; a recuperacao completa trata lacunas.
                 for (SensorRecord record : batch.records) {
                     if (record.getSeq() > seq) { file.append(record); seq = record.getSeq(); }
                 }
@@ -146,6 +151,7 @@ public final class PartitionNode {
     private void becomeLeader() {
         synchronized (lock) {
             if (heartbeats != null) return;
+            // Ha apenas um produtor de heartbeats por no lider.
             pending = new ArrayList<>(); hb = 0;
             heartbeats = Executors.newSingleThreadScheduledExecutor();
             heartbeats.scheduleAtFixedRate(this::sendBatch, 0, Wire.PERIODO_HB_MS,
@@ -204,6 +210,6 @@ public final class PartitionNode {
         System.out.println(line);
         try { Files.writeString(eventFile, line + System.lineSeparator(), StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE, StandardOpenOption.APPEND); }
-        catch (IOException e) { throw new UncheckedIOException("Não foi possível escrever eventos", e); }
+        catch (IOException e) { throw new UncheckedIOException("Nao foi possivel escrever eventos", e); }
     }
 }

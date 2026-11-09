@@ -46,7 +46,7 @@ public class RecordFile {
         int start = name.indexOf("-p");
         int end = name.lastIndexOf(".txt");
         if (start < 0 || end <= start + 2) {
-            throw new IllegalArgumentException("Nome de ficheiro de lÃ­der invÃ¡lido: " + name);
+            throw new IllegalArgumentException("Nome de ficheiro de lider invalido: " + name);
         }
         return Integer.parseInt(name.substring(start + 2, end));
     }

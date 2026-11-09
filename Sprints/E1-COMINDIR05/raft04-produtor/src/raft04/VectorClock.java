@@ -2,13 +2,13 @@ package raft04;
 
 import java.util.Arrays;
 
-/** RelÃ³gio vetorial: cada componente representa o progresso causal de uma partiÃ§Ã£o. */
+/** Relogio vetorial: cada componente representa o progresso causal de uma particao. */
 public final class VectorClock {
     public enum Order { BEFORE, AFTER, EQUAL, CONCURRENT }
 
     private final long[] v;
 
-    /** Cria um vetor de dimensÃ£o N, inicialmente zero. */
+    /** Cria um vetor de dimensao N, inicialmente zero. */
     public VectorClock(int n) {
         this.v = new long[n];
     }
@@ -17,14 +17,14 @@ public final class VectorClock {
         this.v = v;
     }
 
-    /** Funde contextos causais pelo mÃ¡ximo componente a componente. */
+    /** Funde contextos causais pelo maximo componente a componente. */
     public void merge(VectorClock other) {
         for (int i = 0; i < v.length; i++) {
             v[i] = Math.max(v[i], other.v[i]);
         }
     }
 
-    /** Regista um evento local na partiÃ§Ã£o k. */
+    /** Regista um evento local na particao k. */
     public void tick(int k) {
         v[k]++;
     }
@@ -37,7 +37,7 @@ public final class VectorClock {
         return new VectorClock(v.clone());
     }
 
-    /** Classifica a relaÃ§Ã£o causal entre os dois vetores. */
+    /** Classifica a relacao causal entre os dois vetores. */
     public Order compare(VectorClock other) {
         boolean menor = false, maior = false;
         for (int i = 0; i < v.length; i++) {
@@ -61,11 +61,11 @@ public final class VectorClock {
         return sb.toString();
     }
 
-    /** ReconstrÃ³i e valida um vetor, incluindo a sua dimensÃ£o. */
+    /** Reconstroi e valida um vetor, incluindo a sua dimensao. */
     public static VectorClock parse(String s, int n) {
         String[] f = s.trim().split(",");
         if (f.length != n) {
-            throw new IllegalArgumentException("Vetor com dimensÃ£o " + f.length + ", esperado " + n + ": " + s);
+            throw new IllegalArgumentException("Vetor com dimensao " + f.length + ", esperado " + n + ": " + s);
         }
         long[] v = new long[n];
         for (int i = 0; i < n; i++) {

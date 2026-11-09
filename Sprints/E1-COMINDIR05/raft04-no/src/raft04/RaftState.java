@@ -47,18 +47,21 @@ public final class RaftState {
     }
 
     private void persist() {
+        // O estado e persistido antes de publicar qualquer voto. Assim, uma
+        // falha apos a publicacao nao permite votar novamente no mesmo termo.
         try {
             Path tmp = file.resolveSibling(file.getFileName() + ".tmp");
             Files.writeString(tmp, term + ";" + votedFor + "\n", StandardCharsets.UTF_8);
             Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING,
                     StandardCopyOption.ATOMIC_MOVE);
         } catch (IOException e) {
-            throw new UncheckedIOException("Não foi possível persistir o estado Raft", e);
+            throw new UncheckedIOException("Nao foi possivel persistir o estado Raft", e);
         }
     }
 
     private void adopt(long newTerm) {
         if (newTerm <= term) return;
+        // Um termo superior invalida imediatamente o papel de lider/candidato.
         if (role == Role.LIDER) log.accept("DEMISSAO;p" + partition + ";termo=" + term);
         term = newTerm; votedFor = 0; role = Role.SEGUIDOR; votes.clear();
         persist(); resetDeadline();
@@ -66,6 +69,7 @@ public final class RaftState {
 
     public synchronized long tick() {
         if (role == Role.LIDER || System.nanoTime() < deadline) return -1;
+        // O candidato vota primeiro em si proprio e so depois pede os restantes votos.
         term++; votedFor = self; role = Role.CANDIDATO; votes.clear(); votes.add(self);
         persist(); resetDeadline();
         log.accept("CANDIDATO;p" + partition + ";termo=" + term + ";no=" + self);
@@ -77,6 +81,8 @@ public final class RaftState {
         boolean current = request.term() == term;
         boolean upToDate = request.lastTerm() > myTerm
                 || request.lastTerm() == myTerm && request.lastSeq() >= mySeq;
+        // A maioria so e segura se cada no conceder, no maximo, um voto por termo
+        // e se o candidato nao tiver um historico mais atrasado.
         boolean grant = current && (votedFor == 0 || votedFor == request.candidate()) && upToDate;
         if (grant) { votedFor = request.candidate(); persist(); resetDeadline(); }
         log.accept("VOTO;p" + partition + ";termo=" + term + ";candidato=n"
@@ -90,6 +96,7 @@ public final class RaftState {
                 || reply.candidate() != self || !reply.granted()) return false;
         votes.add(reply.voter());
         if (votes.size() <= groupSize / 2) return false;
+        // Com tres nos, dois votos formam a maioria e permitem assumir a lideranca.
         role = Role.LIDER;
         log.accept("LIDER;p" + partition + ";termo=" + term + ";no=" + self + ";votos=" + votes);
         return true;

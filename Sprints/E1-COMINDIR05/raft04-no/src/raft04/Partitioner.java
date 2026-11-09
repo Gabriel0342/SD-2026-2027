@@ -1,10 +1,10 @@
 package raft04;
 
-/** Mapeia sensores para partiÃ§Ãµes de forma determinÃ­stica. */
+/** Mapeia sensores para particoes de forma deterministica. */
 public final class Partitioner {
     private final int n;
 
-    /** Valida o nÃºmero de partiÃ§Ãµes usado para dimensionar os vetores. */
+    /** Valida o numero de particoes usado para dimensionar os vetores. */
     public Partitioner(int n) {
         if (n < 1) {
             throw new IllegalArgumentException("numero de particoes invalido: " + n);
@@ -12,7 +12,7 @@ public final class Partitioner {
         this.n = n;
     }
 
-    /** Usa o hash do sensor, normalizado para nunca produzir Ã­ndice negativo. */
+    /** Usa o hash do sensor, normalizado para nunca produzir indice negativo. */
     public int of(String sensorId) {
         return Math.floorMod(sensorId.hashCode(), n);
     }

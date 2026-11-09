@@ -8,13 +8,13 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.Paths;
 
-/** Interface de consola que publica leituras IN no tÃ³pico da sua partiÃ§Ã£o. */
+/** Interface de consola que publica leituras IN no topico da sua particao. */
 public class Producer {
     static final String API = "http://127.0.0.1:5001/api/v0"; // API por omissao
     private static final long RAJADA_DELAY_MS = 6; // for debug purposes, 0 otherwise
     private static HeartbeatMonitor[] monitors;
 
-    /** LÃª comandos, gera rajadas opcionais e termina com {@code sair}. */
+    /** Le comandos, gera rajadas opcionais e termina com {@code sair}. */
     public static void main(String[] args) throws Exception {
         Properties config = RuntimeConfig.load();
         // numero de particoes e endereco da API: Producer <N> [api];
@@ -144,13 +144,13 @@ public class Producer {
     }
 
     /**
-     * Publica uma leitura com L=0 e vetor zero: o produtor nÃ£o Ã© um lÃ­der nem
-     * cria eventos persistidos, logo nÃ£o acrescenta uma componente causal.
+     * Publica uma leitura com L=0 e vetor zero: o produtor nao e um lider nem
+     * cria eventos persistidos, logo nao acrescenta uma componente causal.
      */
     static void publicar(IpfsPubSub ps, Partitioner pt, int[] contadores, String sensor, double temp) throws Exception {
         int k = pt.of(sensor);
         if (monitors != null && monitors[k].state() == HeartbeatMonitor.State.SUSPEITO) {
-            System.out.println("AVISO: lÃ­der p" + k + " suspeito; leitura "
+            System.out.println("AVISO: lider p" + k + " suspeito; leitura "
                     + sensor + " pode perder-se");
         }
         ps.publish(Wire.topicIn(k), Wire.in(sensor, temp, 0, new VectorClock(pt.count())));
