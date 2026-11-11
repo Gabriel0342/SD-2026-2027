@@ -21,13 +21,16 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- Java Discord API -->
             <dependency>
                 <groupId>net.dv8tion</groupId>
                 <artifactId>JDA</artifactId>
                 <version>6.7.0</version>
             </dependency>
-            <!-- Backend de logging: mostra a ligacao/login da JDA na consola -->
+            <dependency>
+                <groupId>io.github.cdimascio</groupId>
+                <artifactId>dotenv-java</artifactId>
+                <version>3.2.0</version>
+            </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
