@@ -4,6 +4,8 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/Sprints/E1-COMINDIR02" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Sprints/tfp/tfp-lider" isTestSource="false" packagePrefix="tpf" />
+      <sourceFolder url="file://$MODULE_DIR$/Sprints/tfp/tfp-replica" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/Sprints/E1-COMINDIR01" />
       <excludeFolder url="file://$MODULE_DIR$/Sprints/E1-TCP01" />
       <excludeFolder url="file://$MODULE_DIR$/Sprints/E1-UDP01" />
