@@ -7,3 +7,11 @@ out/
 Sprints/**/lider*.txt
 Sprints/**/replica*.txt
 Sprints/**/*.lock
+
+# Maven
+target/
+
+# Segredos do arquivo (token do bot, master key)
+.env
+token.txt
+master.key
