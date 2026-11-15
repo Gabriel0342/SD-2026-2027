@@ -43,7 +43,7 @@ public class LeaderBot extends ListenerAdapter {
    }
 
     @Override
-    public void onGuildReady(GuildReadyEvent event) {
+    public void onGuildReady(GuildReadyEvent event) { // registra os comandos no Discord
         event.getGuild().updateCommands().addCommands(
                 Commands.slash("registar", "Regista um texto no arquivo").addOption(OptionType.STRING, "texto", "Texto a registar", true),
                 Commands.slash("estado", "Ver o estado do sistema"),
@@ -70,7 +70,7 @@ public class LeaderBot extends ListenerAdapter {
                     event.reply("Comando exclusivo a membros com o papel admin-arquivo.").setEphemeral(true).queue();
                     return;
                 }
-                long r = event.getOption("r").getAsLong();
+                int r = event.getOption("r").getAsInt();
                 if (r <= 0) {
                     event.reply("Erro: r tem de ser um inteiro positivo.").setEphemeral(true).queue();
                     return;
@@ -116,8 +116,8 @@ public class LeaderBot extends ListenerAdapter {
                     event.reply("Comando exclusivo a membros com o papel admin-arquivo.").setEphemeral(true).queue();
                     return;
                 }
-                long n = event.getOption("n").getAsLong();
-                long intervalo = event.getOption("intervaloms").getAsLong();
+                int n = event.getOption("n").getAsInt();
+                int intervalo = event.getOption("intervaloms").getAsInt();
                 if (n <= 0 || intervalo < 0) {
                     event.reply("Erro: n tem de ser positivo e intervaloMs não negativo.").setEphemeral(true).queue();
                     return;
