@@ -30,7 +30,7 @@ public class LeaderBot extends ListenerAdapter {
                 .enableIntents(GatewayIntent.MESSAGE_CONTENT) // Permite ler mensagens
                 .addEventListeners(new LeaderBot())        // Registra esta classe para ouvir eventos
                 .build();                                     // Liga o bot
-        }
+    }
 
    // Método executado sempre que uma mensagem é enviada no servidor
    @Override
@@ -40,6 +40,9 @@ public class LeaderBot extends ListenerAdapter {
 
        // Ignora mensagens fora do canal #arquivo
        if (!event.getChannel().getName().equals("arquivo")) return;
+
+       // Registo provisório: confirma que o filtro está a funcionar
+       System.out.printf("[arquivo] %s: %s%n", event.getAuthor().getName(), event.getMessage().getContentDisplay());
    }
 
     @Override
@@ -48,7 +51,7 @@ public class LeaderBot extends ListenerAdapter {
                 Commands.slash("registar", "Regista um texto no arquivo").addOption(OptionType.STRING, "texto", "Texto a registar", true),
                 Commands.slash("estado", "Ver o estado do sistema"),
                 Commands.slash("config", "Configura parâmetros do sistema").addOption(OptionType.INTEGER, "r", "Fator de replicação", true),
-                Commands.slash("recuperar", "Recupera os dados entre duas datas").addOption(OptionType.STRING, "de", "Data inicial (AAAA-MM-DD)", true).addOption(OptionType.STRING, "ate", "Data final (AAAA-MM-DD)", true),
+                Commands.slash("recuperar", "Recupera os dados entre dois IDs").addOption(OptionType.INTEGER, "de", "Valor inicial", true).addOption(OptionType.INTEGER, "ate", "Valor final", true),
                 Commands.slash("replica-token", "Gera um token de réplica"),
                 Commands.slash("replica-remover", "Remove a réplica com um dado id").addOption(OptionType.STRING, "id", "ID da réplica", true),
                 Commands.slash("rajada", "Faz uma rajada de n mensagens com intervaloMs").addOption(OptionType.INTEGER, "n", "Número de mensagens", true).addOption(OptionType.INTEGER, "intervaloms", "Intervalo em milissegundos", true)
@@ -79,19 +82,18 @@ public class LeaderBot extends ListenerAdapter {
             }
 
             case "recuperar" -> {
-                String de = event.getOption("de").getAsString();
-                String ate = event.getOption("ate").getAsString();
+                int de = event.getOption("de").getAsInt();
+                int ate = event.getOption("ate").getAsInt();
                 try {
-                    LocalDate d1 = LocalDate.parse(de);
-                    LocalDate d2 = LocalDate.parse(ate);
-                    if (d1.isAfter(d2)) {
-                        event.reply("Erro: 'de' tem de ser anterior ou igual a 'ate'.").setEphemeral(true).queue();
+                    if (de > ate) {
+                        event.reply("O primeiro valor tem de ser menor que o segundo").queue();
                         return;
                     }
-                } catch (DateTimeParseException e) {
-                    event.reply("Erro: datas inválidas, uso AAAA-MM-DD.").setEphemeral(true).queue();
+                } catch (Exception e) {
+                    event.reply("Erro: Valores invalidos").setEphemeral(true).queue();
                     return;
                 }
+
                 event.replyFormat("`/recuperar` recebido: de=%s, ate=%s — ainda não implementado", de, ate).queue();
             }
 
