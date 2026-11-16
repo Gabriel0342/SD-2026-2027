@@ -29,7 +29,6 @@ public class LeaderBot extends ListenerAdapter {
                 .build();                                     // Liga o bot
     }
 
-   // Método executado sempre que uma mensagem é enviada no servidor
    @Override
    public void onMessageReceived(MessageReceivedEvent event) {
        // Ignora mensagens enviadas por outros bots (incluindo ele próprio)
