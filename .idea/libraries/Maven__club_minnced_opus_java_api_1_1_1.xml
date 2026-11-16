@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="Maven: club.minnced:opus-java-api:1.1.1" type="java-imported" external-system-id="Maven">
+    <properties groupId="club.minnced" artifactId="opus-java-api" version="1.1.1" baseVersion="1.1.1" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/club/minnced/opus-java-api/1.1.1/opus-java-api-1.1.1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/club/minnced/opus-java-api/1.1.1/opus-java-api-1.1.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/club/minnced/opus-java-api/1.1.1/opus-java-api-1.1.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
