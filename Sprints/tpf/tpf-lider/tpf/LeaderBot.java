@@ -84,16 +84,10 @@ public class LeaderBot extends ListenerAdapter {
             case "recuperar" -> {
                 int de = event.getOption("de").getAsInt();
                 int ate = event.getOption("ate").getAsInt();
-                try {
-                    if (de > ate) {
-                        event.reply("O primeiro valor tem de ser menor que o segundo").queue();
-                        return;
-                    }
-                } catch (Exception e) {
-                    event.reply("Erro: Valores invalidos").setEphemeral(true).queue();
+                if (de > ate) {
+                    event.reply("O primeiro valor tem de ser menor que o segundo").setEphemeral(true).queue();
                     return;
                 }
-
                 event.replyFormat("`/recuperar` recebido: de=%s, ate=%s — ainda não implementado", de, ate).queue();
             }
 
