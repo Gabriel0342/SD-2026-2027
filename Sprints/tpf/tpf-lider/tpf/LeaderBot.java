@@ -11,9 +11,6 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.entities.Member;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
-
 public class LeaderBot extends ListenerAdapter {
 
     //Verifica se um membro tem o papel "admin-arquivo".
@@ -120,7 +117,6 @@ public class LeaderBot extends ListenerAdapter {
                 }
                 event.replyFormat("`/rajada` recebido: n=%d, intervaloMs=%d — ainda não implementado", n, intervalo).queue();
             }
-
             default -> event.reply("Comando desconhecido.").queue();
         }
     }
