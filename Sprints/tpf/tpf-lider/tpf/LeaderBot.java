@@ -12,6 +12,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.entities.Member;
 
 public class LeaderBot extends ListenerAdapter {
+    boolean comandosRegistados = true;
 
     //Verifica se um membro tem o papel "admin-arquivo".
     private boolean isAdmin(Member member) {
@@ -43,6 +44,7 @@ public class LeaderBot extends ListenerAdapter {
 
     @Override
     public void onGuildReady(GuildReadyEvent event) { // registra os comandos no Discord
+        if(comandosRegistados) return;
         event.getGuild().updateCommands().addCommands(
                 Commands.slash("registar", "Regista um texto no arquivo").addOption(OptionType.STRING, "texto", "Texto a registar", true),
                 Commands.slash("estado", "Ver o estado do sistema"),
@@ -52,6 +54,7 @@ public class LeaderBot extends ListenerAdapter {
                 Commands.slash("replica-remover", "Remove a réplica com um dado id").addOption(OptionType.STRING, "id", "ID da réplica", true),
                 Commands.slash("rajada", "Faz uma rajada de n mensagens com intervaloMs").addOption(OptionType.INTEGER, "n", "Número de mensagens", true).addOption(OptionType.INTEGER, "intervaloms", "Intervalo em milissegundos", true)
         ).queue();
+        comandosRegistados = true;
     }
 
     @Override
