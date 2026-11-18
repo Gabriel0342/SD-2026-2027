@@ -11,7 +11,12 @@ Sprints/**/*.lock
 # Maven
 target/
 
-# Segredos do arquivo (token do bot, master key)
+# Segredos do arquivo (token do bot, master key e o seu ficheiro temporário)
 .env
 token.txt
-master.key
+master.key*
+
+# Dados de execução do líder do TPF (registos em claro e chunks selados)
+Sprints/**/registos.log
+Sprints/**/eventos-*.txt
+Sprints/**/selados/
