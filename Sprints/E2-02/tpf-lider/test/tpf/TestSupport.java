@@ -11,8 +11,8 @@ import java.util.stream.Stream;
 
 /**
  * Minimal assertion helpers. The project may only use JDA, Java-WebSocket and the JDK,
- * so the tests do not depend on JUnit: a failed check throws an {@link AssertionError},
- * which makes {@code mvn test} fail.
+ * so the tests do not depend on JUnit: a failed check throws an AssertionError,
+ * which makes mvn test fail.
  */
 final class TestSupport {
 
@@ -43,7 +43,7 @@ final class TestSupport {
         System.out.println("  ok   " + description);
     }
 
-    /** Runs {@code action} and checks that it throws an exception of the given type. */
+    /** Runs action and checks that it throws an exception of the given type. */
     static <T extends Throwable> T expectThrows(Class<T> type, String description, Action action) {
         try {
             action.run();
@@ -58,7 +58,7 @@ final class TestSupport {
         throw new AssertionError("FAILED: " + description + ": no exception was thrown");
     }
 
-    /** Polls {@code condition} every 20 ms until it holds or {@code timeoutMs} expires. */
+    /** Polls condition every 20 ms until it holds or timeoutMs expires. */
     static void waitUntil(BooleanSupplier condition, long timeoutMs, String description) throws InterruptedException {
         long deadline = System.currentTimeMillis() + timeoutMs;
         while (!condition.getAsBoolean()) {

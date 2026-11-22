@@ -30,19 +30,19 @@ public final class Registo {
     }
 
     /**
-     * Formats the record as one line of {@code registos.log}:
-     * {@code lsn;instante;autor;canal;texto em Base64} (without the trailing newline).
+     * Formats the record as one line of registos.log:
+     * lsn;instante;autor;canal;texto em Base64 (without the trailing newline).
      *
-     * <p>Only the text is Base64-encoded, because it is the only free-form field: the
-     * author and channel are sanitized by {@link #sanitizeField(String)} before a
-     * record is created, so they never contain {@code ;} or line breaks.
+     * Only the text is Base64-encoded, because it is the only free-form field: the
+     * author and channel are sanitized by sanitizeField(String) before a
+     * record is created, so they never contain a ";" or line breaks.
      */
     public String toLogLine() {
         String text64 = Base64.getEncoder().encodeToString(texto.getBytes(StandardCharsets.UTF_8));
         return lsn + ";" + instante + ";" + autor + ";" + canal + ";" + text64;
     }
 
-    /** Parses a line written by {@link #toLogLine()}; throws {@link IllegalArgumentException} if malformed. */
+    /** Parses a line written by toLogLine(); throws IllegalArgumentException if malformed. */
     public static Registo fromLogLine(String line) {
         String[] fields = line.split(";", -1);   // -1 keeps an empty last field (empty text)
         if (fields.length != 5) {
@@ -59,7 +59,7 @@ public final class Registo {
     }
 
     /**
-     * Makes a value safe for the {@code ;}-separated log format by replacing the
+     * Makes a value safe for the ";"-separated log format by replacing the
      * separator and line breaks. Discord user and channel names normally never contain
      * them, but display names can, and a single bad line would corrupt the log.
      */

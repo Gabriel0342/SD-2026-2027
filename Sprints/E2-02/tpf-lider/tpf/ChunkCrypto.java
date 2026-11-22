@@ -15,14 +15,12 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * Encrypts and decrypts chunks with keys derived from the leader's master key (MK).
  *
- * <pre>
  * salt    = 32 random bytes            (new for every chunk)
  * nonce   = 12 random bytes            (new for every chunk)
  * DEK     = HKDF-SHA256(MK, salt, info = "tpf-chunk-v1")
  * aad     = "tpf-v1" || keyVersion (4 bytes) || salt || nonce
  * cipher  = AES-256-GCM(DEK, nonce, padded plaintext, aad), 128-bit tag appended
  * chunkId = SHA-256(cipher, tag included), in hexadecimal
- * </pre>
  */
 public final class ChunkCrypto {
 
@@ -62,7 +60,7 @@ public final class ChunkCrypto {
 
     /**
      * HKDF-SHA256 (RFC 5869) with a 32-byte output: the extract step followed by a
-     * single expand block, i.e. {@code T(1) = HMAC(PRK, info || 0x01)}.
+     * single expand block, i.e. T(1) = HMAC(PRK, info || 0x01).
      */
     static byte[] hkdf(byte[] ikm, byte[] salt, byte[] info) throws GeneralSecurityException {
         Mac mac = Mac.getInstance("HmacSHA256");

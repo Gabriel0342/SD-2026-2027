@@ -35,28 +35,28 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 /**
  * The leader: a Discord bot that archives records.
  *
- * <h2>Local write path (sprint E2-02)</h2>
- * <pre>
+ * Local write path (sprint E2-02):
+ *
  * /registar, #arquivo message, /rajada
  *   -> registar(autor, canal, texto)       next LSN, append to registos.log + fsync, REGISTO event
  *   -> open chunk                          sealed by size (CHUNK_MAX_BYTES) or by time (SELAGEM_MS)
  *   -> serialize + pad, encrypt            DEK derived from master.key (ChunkCrypto)
- *   -> selados/&lt;chunkId&gt;.bin + .hdr       SELADO event
- * </pre>
- * Replicas, placement, catalog, manifest and recovery come in later sprints, so
- * {@code /estado}, {@code /config}, {@code /recuperar}, {@code /replica-token} and
- * {@code /replica-remover} still give the provisional answer of sprint E2-01.
+ *   -> selados/<chunkId>.bin + .hdr        SELADO event
  *
- * <h2>Threads and locking</h2>
- * <ul>
- *   <li>JDA event thread: slash commands and messages from {@code #arquivo};</li>
- *   <li>burst thread: the synthetic records of {@code /rajada};</li>
- *   <li>sealer thread: the {@code SELAGEM_MS} timers and the encryption and storage of sealed chunks.</li>
- * </ul>
- * A single lock (this object's monitor) protects {@code nextLsn}, the append to
- * {@code registos.log} and the open chunk, so LSN order, log order and chunk order are
+ * Replicas, placement, catalog, manifest and recovery come in later sprints, so
+ * /estado, /config, /recuperar, /replica-token and /replica-remover still give the
+ * provisional answer of sprint E2-01.
+ *
+ * Threads and locking:
+ *
+ *   - JDA event thread: slash commands and messages from #arquivo;
+ *   - burst thread: the synthetic records of /rajada;
+ *   - sealer thread: the SELAGEM_MS timers and the encryption and storage of sealed chunks.
+ *
+ * A single lock (this object's monitor) protects nextLsn, the append to
+ * registos.log and the open chunk, so LSN order, log order and chunk order are
  * always the same. Encrypting and writing a sealed chunk happens on the sealer thread,
- * outside the lock, so sealing never delays the {@code fsync} of the next records.
+ * outside the lock, so sealing never delays the fsync of the next records.
  */
 public class LeaderBot extends ListenerAdapter implements Closeable {
 
@@ -72,14 +72,14 @@ public class LeaderBot extends ListenerAdapter implements Closeable {
     static final String SEALED_DIR = "selados";
 
     /**
-     * Length of each synthetic {@code /rajada} text. With about 440 bytes per serialized
-     * record, a 64 KB chunk holds roughly 148 records, so {@code /rajada 500 0} fills
+     * Length of each synthetic /rajada text. With about 440 bytes per serialized
+     * record, a 64 KB chunk holds roughly 148 records, so /rajada 500 0 fills
      * several chunks by size, as the acceptance criteria require.
      */
     static final int BURST_TEXT_CHARS = 400;
-    /** Upper bound for {@code /rajada <n>}, to protect the leader from a typo. */
+    /** Upper bound for /rajada <n>, to protect the leader from a typo. */
     static final int MAX_BURST_RECORDS = 100_000;
-    /** Upper bound for {@code /rajada <intervaloMs>}. */
+    /** Upper bound for /rajada <intervaloMs>. */
     static final int MAX_BURST_INTERVAL_MS = 60_000;
 
     private final ChunkCrypto crypto;
@@ -126,7 +126,7 @@ public class LeaderBot extends ListenerAdapter implements Closeable {
                 .build();
     }
 
-    /** Reads the bot token from {@code .env} (current directory) or from the environment. */
+    /** Reads the bot token from .env (current directory) or from the environment. */
     private static String discordToken() {
         String token = Dotenv.configure().ignoreIfMissing().load().get("DISCORD_BOT_TOKEN");
         if (token == null || token.isBlank()) {
@@ -136,8 +136,8 @@ public class LeaderBot extends ListenerAdapter implements Closeable {
     }
 
     /**
-     * Opens (or creates) the leader's local state in {@code dataDir}: the master key,
-     * the event log, the sealed chunks and {@code registos.log}. Package-private so that
+     * Opens (or creates) the leader's local state in dataDir: the master key,
+     * the event log, the sealed chunks and registos.log. Package-private so that
      * the tests can run the whole write path without Discord.
      */
     LeaderBot(Path dataDir) throws IOException {
@@ -184,8 +184,8 @@ public class LeaderBot extends ListenerAdapter implements Closeable {
     }
 
     /**
-     * LSN ranges (first -> last) of the chunks already in {@code selados/}, found by
-     * opening each of them. Until the catalog exists (later sprint), {@code selados/} is
+     * LSN ranges (first -> last) of the chunks already in selados/, found by
+     * opening each of them. Until the catalog exists (later sprint), selados/ is
      * the leader's only record of what has already been sealed.
      */
     private NavigableMap<Long, Long> sealedLsnRanges() throws IOException {
@@ -209,11 +209,11 @@ public class LeaderBot extends ListenerAdapter implements Closeable {
     // =================================================================== write path
 
     /**
-     * The single entry point of the write path, shared by {@code /registar}, the
-     * messages of {@code #arquivo} and {@code /rajada}.
+     * The single entry point of the write path, shared by /registar, the
+     * messages of #arquivo and /rajada.
      *
-     * <p>The record gets the next LSN and is appended to {@code registos.log}; the method
-     * only returns after {@code fsync}, so the caller may tell the user the LSN knowing
+     * The record gets the next LSN and is appended to registos.log; the method
+     * only returns after fsync, so the caller may tell the user the LSN knowing
      * the record is durable. If the write fails, nothing changes (the LSN is not consumed).
      */
     synchronized long registar(String autor, String canal, String texto) throws IOException {
@@ -243,7 +243,7 @@ public class LeaderBot extends ListenerAdapter implements Closeable {
         }
     }
 
-    /** Runs on the sealer thread when the SELAGEM_MS timer of chunk {@code generation} expires. */
+    /** Runs on the sealer thread when the SELAGEM_MS timer of chunk generation expires. */
     private synchronized void sealOnTimeout(long generation) {
         // If that chunk was already sealed by size, the open chunk is a newer one with its own timer.
         if (generation == chunkGeneration && !chunkAberto.isEmpty()) {
@@ -252,7 +252,7 @@ public class LeaderBot extends ListenerAdapter implements Closeable {
     }
 
     /**
-     * Closes the open chunk, which becomes an immutable {@link Chunk}, and hands it to the
+     * Closes the open chunk, which becomes an immutable Chunk, and hands it to the
      * sealer thread. The next record opens a new chunk. Caller holds the lock.
      */
     private void selar() {
@@ -297,8 +297,8 @@ public class LeaderBot extends ListenerAdapter implements Closeable {
     }
 
     /**
-     * Injects {@code n} synthetic records through {@link #registar}, one every
-     * {@code intervalMs}, in the calling thread. Returns {@code {firstLsn, lastLsn}}.
+     * Injects n synthetic records through registar, one every
+     * intervalMs, in the calling thread. Returns {firstLsn, lastLsn}.
      */
     long[] rajada(String autor, String canal, int n, long intervalMs) throws IOException, InterruptedException {
         String burstId = randomAlphanumeric(6);
@@ -316,7 +316,7 @@ public class LeaderBot extends ListenerAdapter implements Closeable {
         return new long[] {firstLsn, lastLsn};
     }
 
-    /** "rajada &lt;id&gt; &lt;i&gt;/&lt;n&gt; " followed by random letters and digits, BURST_TEXT_CHARS long. */
+    /** Text like "rajada k3x9ab 7/500 " followed by random letters and digits, BURST_TEXT_CHARS long. */
     private static String syntheticText(String burstId, int i, int n) {
         String prefix = "rajada " + burstId + " " + i + "/" + n + " ";
         return prefix + randomAlphanumeric(Math.max(0, BURST_TEXT_CHARS - prefix.length()));
@@ -335,7 +335,7 @@ public class LeaderBot extends ListenerAdapter implements Closeable {
     /**
      * Stops the leader: no more records are accepted, chunks already sealed finish being
      * written and pending timers are dropped. The records of the open chunk are safe in
-     * {@code registos.log} and are re-queued at the next start.
+     * registos.log and are re-queued at the next start.
      */
     @Override
     public void close() {
@@ -469,7 +469,7 @@ public class LeaderBot extends ListenerAdapter implements Closeable {
         }
     }
 
-    /** /registar &lt;texto&gt;: answers with the LSN only after the record is in registos.log. */
+    /** /registar <texto>: answers with the LSN only after the record is in registos.log. */
     private void handleRegistar(SlashCommandInteractionEvent event) {
         String texto = event.getOption("texto").getAsString();
         if (texto.isBlank()) {
@@ -485,7 +485,7 @@ public class LeaderBot extends ListenerAdapter implements Closeable {
         }
     }
 
-    /** /rajada &lt;n&gt; &lt;intervaloMs&gt; (admin only): synthetic records through the same path as /registar. */
+    /** /rajada <n> <intervaloMs> (admin only): synthetic records through the same path as /registar. */
     private void handleRajada(SlashCommandInteractionEvent event) {
         if (!requireAdmin(event)) return;
         int n = event.getOption("n").getAsInt();

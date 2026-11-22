@@ -10,9 +10,9 @@ import java.util.List;
  * An immutable group of consecutive records, the unit that is sealed (encrypted)
  * and, in later sprints, replicated.
  *
- * <h2>Binary format (before encryption)</h2>
+ * Binary format (before encryption):
  * All integers are big-endian and all strings are UTF-8.
- * <pre>
+ *
  * Header (9 bytes)
  *   magic        4 bytes   "TPFC" (0x54504643)
  *   version      1 byte    format version, currently 1
@@ -25,10 +25,10 @@ import java.util.List;
  *   textoLen     4 bytes   int, followed by textoLen bytes of 'texto'
  * Padding
  *   zero bytes up to the next multiple of PAD_BYTES (none if already a multiple)
- * </pre>
- * The reader stops after {@code count} records, so the padding is simply ignored.
+ *
+ * The reader stops after count records, so the padding is simply ignored.
  * Padding hides the exact amount of data: after encryption a replica only learns
- * the size rounded up to {@code PAD_BYTES}.
+ * the size rounded up to PAD_BYTES.
  */
 public final class Chunk {
 
@@ -51,7 +51,7 @@ public final class Chunk {
         this.registos = List.copyOf(registos);   // defensive, unmodifiable copy: a chunk never changes
     }
 
-    /** Number of bytes {@code registo} takes in the serialized format (without padding). */
+    /** Number of bytes registo takes in the serialized format (without padding). */
     public static int recordBytes(Registo registo) {
         return RECORD_FIXED_BYTES
                 + utf8Length(registo.autor)
@@ -78,7 +78,7 @@ public final class Chunk {
 
     /**
      * Serializes the records and appends zero bytes until the length is a multiple
-     * of {@code padBytes}.
+     * of padBytes.
      */
     public byte[] serializar(int padBytes) {
         if (padBytes <= 0) {
@@ -100,9 +100,8 @@ public final class Chunk {
     }
 
     /**
-     * Inverse of {@link #serializar(int)}: rebuilds the records and ignores the padding.
-     *
-     * @throws IllegalArgumentException if the bytes are not a valid serialized chunk
+     * Inverse of serializar(int): rebuilds the records and ignores the padding.
+     * Throws IllegalArgumentException if the bytes are not a valid serialized chunk.
      */
     public static Chunk ler(byte[] dados) {
         ByteBuffer in = ByteBuffer.wrap(dados);
@@ -155,7 +154,7 @@ public final class Chunk {
         return value.getBytes(StandardCharsets.UTF_8).length;
     }
 
-    /** Smallest multiple of {@code multiple} that is greater than or equal to {@code value}. */
+    /** Smallest multiple of multiple that is greater than or equal to value. */
     static int roundUp(int value, int multiple) {
         int remainder = value % multiple;
         return remainder == 0 ? value : Math.addExact(value, multiple - remainder);

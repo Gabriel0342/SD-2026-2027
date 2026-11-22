@@ -13,11 +13,11 @@ import java.nio.file.StandardOpenOption;
 import java.util.function.Consumer;
 
 /**
- * The leader's durable log, {@code registos.log}: one line per record, in LSN order,
- * with the format {@code lsn;instante;autor;canal;texto em Base64}.
+ * The leader's durable log, registos.log: one line per record, in LSN order,
+ * with the format lsn;instante;autor;canal;texto em Base64.
  *
- * <p>A record is only acknowledged to the user after its line has been forced to
- * disk with {@code FileChannel.force(true)}, so an acknowledged record is never
+ * A record is only acknowledged to the user after its line has been forced to
+ * disk with FileChannel.force(true), so an acknowledged record is never
  * lost by a crash of the leader process.
  */
 final class RegistoLog implements Closeable {
@@ -36,15 +36,13 @@ final class RegistoLog implements Closeable {
 
     /**
      * Opens (or creates) the log, replaying every existing record through
-     * {@code visitor} in LSN order.
+     * visitor in LSN order.
      *
-     * <ul>
-     *   <li>LSNs must start at 1 and increase by exactly 1; anything else means the log
-     *       was corrupted or edited by hand, and the leader refuses to start.</li>
-     *   <li>Bytes after the last newline are the remains of an append interrupted by a
-     *       crash. That record was never acknowledged (the reply only happens after
-     *       {@code fsync}), so the incomplete line is cut off.</li>
-     * </ul>
+     *   - LSNs must start at 1 and increase by exactly 1; anything else means the log
+     *     was corrupted or edited by hand, and the leader refuses to start.
+     *   - Bytes after the last newline are the remains of an append interrupted by a
+     *     crash. That record was never acknowledged (the reply only happens after
+     *     fsync), so the incomplete line is cut off.
      */
     static RegistoLog open(Path file, Consumer<Registo> visitor) throws IOException {
         boolean existed = Files.exists(file);

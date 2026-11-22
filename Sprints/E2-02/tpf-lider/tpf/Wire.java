@@ -3,20 +3,20 @@ package tpf;
 /**
  * Parameters shared by the leader (and, in later sprints, by the replicas).
  *
- * <p>Every tunable value can be overridden on the command line with a system
- * property using the {@code tpf.} prefix, for example
- * {@code -Dtpf.chunkMax=16384 -Dtpf.selagem=2000}. Only the parameters needed
+ * Every tunable value can be overridden on the command line with a system
+ * property using the "tpf." prefix, for example
+ * -Dtpf.chunkMax=16384 -Dtpf.selagem=2000. Only the parameters needed
  * by the leader's local write path (sprint E2-02) exist so far.
  */
 public final class Wire {
 
-    /** A chunk is sealed as soon as its serialized records reach this many bytes ({@code tpf.chunkMax}). */
+    /** A chunk is sealed as soon as its serialized records reach this many bytes (tpf.chunkMax). */
     public static final int CHUNK_MAX_BYTES = positiveInt("tpf.chunkMax", 65536);
 
-    /** Serialized chunks are padded up to a multiple of this many bytes ({@code tpf.pad}). */
+    /** Serialized chunks are padded up to a multiple of this many bytes (tpf.pad). */
     public static final int PAD_BYTES = positiveInt("tpf.pad", 4096);
 
-    /** A chunk is sealed this many milliseconds after its first record entered it ({@code tpf.selagem}). */
+    /** A chunk is sealed this many milliseconds after its first record entered it (tpf.selagem). */
     public static final long SELAGEM_MS = positiveLong("tpf.selagem", 5000);
 
     /**

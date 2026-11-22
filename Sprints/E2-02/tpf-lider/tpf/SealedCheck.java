@@ -18,24 +18,21 @@ import java.util.TreeMap;
  * Offline check of the leader's sealed chunks. It can run with the leader stopped or
  * running, and never modifies any file.
  *
- * <pre>
  * SealedCheck [pastaLider] [masterKey]
  *   pastaLider  leader data folder (default: -Dtpf.pasta, or the current directory)
  *   masterKey   key used to open the chunks (default: pastaLider/master.key);
  *               pass a different key to see every chunk fail to open
- * </pre>
  *
- * For every {@code selados/<chunkId>.bin} it verifies that:
- * <ol>
- *   <li>the file name is the SHA-256 of the file content;</li>
- *   <li>the chunk opens with the master key (hash, key version and GCM tag);</li>
- *   <li>the padded plaintext is a multiple of {@code PAD_BYTES};</li>
- *   <li>its records have consecutive LSNs and are exactly the lines of {@code registos.log}
- *       (LSN, instant, author, channel and text);</li>
- *   <li>its LSN range matches the {@code SELADO} event in {@code eventos-lider.txt};</li>
- *   <li>none of its record texts (longer than 8 characters) appears in clear in the
- *       {@code .bin} or {@code .hdr} files.</li>
- * </ol>
+ * For every selados/<chunkId>.bin it verifies that:
+ *   1. the file name is the SHA-256 of the file content;
+ *   2. the chunk opens with the master key (hash, key version and GCM tag);
+ *   3. the padded plaintext is a multiple of PAD_BYTES;
+ *   4. its records have consecutive LSNs and are exactly the lines of registos.log
+ *      (LSN, instant, author, channel and text);
+ *   5. its LSN range matches the SELADO event in eventos-lider.txt;
+ *   6. none of its record texts (longer than 8 characters) appears in clear in the
+ *      .bin or .hdr files.
+ *
  * Finally it reports which logged LSNs are not (yet) in any sealed chunk.
  */
 public final class SealedCheck {
@@ -47,7 +44,7 @@ public final class SealedCheck {
     record Report(int chunks, int failures, int sealedRecords, List<Long> unsealedLsns, List<Long> duplicatedLsns) {
     }
 
-    /** Outcome of checking one chunk; {@code firstLsn} orders the output (unreadable chunks go last). */
+    /** Outcome of checking one chunk; firstLsn orders the output (unreadable chunks go last). */
     private record ChunkResult(long firstLsn, String summary, List<String> problems) {
     }
 
@@ -214,7 +211,7 @@ public final class SealedCheck {
         return log;
     }
 
-    /** chunkId -> "first-last" from the SELADO events ("chunk=&lt;id&gt; lsn=&lt;a&gt;-&lt;b&gt; ..."). */
+    /** chunkId -> "first-last" from the SELADO events ("chunk=<id> lsn=<a>-<b> ..."). */
     private static Map<String, String> readSealedEvents(Path file) throws IOException {
         Map<String, String> ranges = new HashMap<>();
         if (Files.notExists(file)) {

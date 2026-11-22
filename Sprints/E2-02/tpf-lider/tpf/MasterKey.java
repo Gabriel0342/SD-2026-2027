@@ -18,12 +18,12 @@ import java.security.SecureRandom;
 import java.util.List;
 
 /**
- * Loads the leader's master key (MK) from {@code master.key}, creating it on the
+ * Loads the leader's master key (MK) from master.key, creating it on the
  * very first start.
  *
- * <p>The MK never leaves the leader: every chunk key is derived from it, so whoever
+ * The MK never leaves the leader: every chunk key is derived from it, so whoever
  * holds this file can read the whole archive, and whoever loses it loses the archive.
- * Keep a backup outside the repository (the {@code .gitignore} already excludes it).
+ * Keep a backup outside the repository (the .gitignore already excludes it).
  */
 public final class MasterKey {
 
@@ -34,14 +34,12 @@ public final class MasterKey {
     }
 
     /**
-     * Returns the 32-byte master key stored in {@code file}.
+     * Returns the 32-byte master key stored in file.
      *
-     * <ul>
-     *   <li>If the file does not exist, a new key is generated with {@link SecureRandom}
-     *       and stored readable by its owner only.</li>
-     *   <li>If the file exists but does not hold exactly 32 bytes, the leader refuses to
-     *       start: silently replacing it would make every sealed chunk unreadable.</li>
-     * </ul>
+     *   - If the file does not exist, a new key is generated with SecureRandom
+     *     and stored readable by its owner only.
+     *   - If the file exists but does not hold exactly 32 bytes, the leader refuses to
+     *     start: silently replacing it would make every sealed chunk unreadable.
      */
     public static byte[] loadOrCreate(Path file) throws IOException {
         if (Files.notExists(file)) {
@@ -66,8 +64,8 @@ public final class MasterKey {
 
     /**
      * Writes the key through a temporary file and an atomic rename, so that a crash
-     * never leaves a truncated {@code master.key} behind, and then restricts the
-     * permissions to "read-only for the owner" (the equivalent of {@code chmod 400}).
+     * never leaves a truncated master.key behind, and then restricts the
+     * permissions to "read-only for the owner" (the equivalent of chmod 400).
      */
     private static void create(Path file, byte[] key) throws IOException {
         Path tmp = file.resolveSibling(file.getFileName() + ".tmp");
@@ -101,7 +99,7 @@ public final class MasterKey {
 
     /**
      * Windows has no POSIX permission bits, so the file's ACL is replaced by a single
-     * entry that lets its owner read it (and delete it, as {@code chmod 400} would
+     * entry that lets its owner read it (and delete it, as chmod 400 would
      * still allow on Linux). Nobody else gets any access.
      */
     private static void restrictToOwnerOnWindows(Path file) {

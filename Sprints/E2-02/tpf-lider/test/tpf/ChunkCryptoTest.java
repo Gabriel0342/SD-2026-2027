@@ -13,7 +13,7 @@ import java.util.List;
 import javax.crypto.AEADBadTagException;
 
 /**
- * Tests of {@link ChunkCrypto}: seal and open, a changed ciphertext byte, a different
+ * Tests of ChunkCrypto: seal and open, a changed ciphertext byte, a different
  * salt / nonce / key version, a different master key, swapped headers, and the HKDF
  * against the RFC 5869 test vector.
  */

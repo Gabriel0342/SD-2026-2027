@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 
 /**
  * End-to-end test of the leader's local write path, without Discord: it drives
- * {@link LeaderBot#registar} and {@link LeaderBot#rajada} directly and checks the
+ * LeaderBot.registar and LeaderBot.rajada directly and checks the
  * acceptance criteria of sprint E2-02 on the files of a temporary leader folder.
  */
 final class LeaderWritePathTest {

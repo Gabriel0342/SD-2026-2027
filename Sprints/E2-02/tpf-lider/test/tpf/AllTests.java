@@ -1,10 +1,8 @@
 package tpf;
 
 /**
- * Runs every test of the leader. Started by {@code mvn test} (see the pom), or directly:
- * <pre>
+ * Runs every test of the leader. Started by mvn test (see the pom), or directly:
  * mvn -pl tpf-lider test
- * </pre>
  */
 public final class AllTests {
 

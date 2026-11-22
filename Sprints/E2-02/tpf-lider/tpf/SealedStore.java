@@ -12,13 +12,13 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * The leader's folder of sealed chunks, {@code selados/}. Each chunk is stored as two files:
- * <ul>
- *   <li>{@code <chunkId>.bin}: the ciphertext (GCM tag included), so the file name is
- *       the SHA-256 of the file content;</li>
- *   <li>{@code <chunkId>.hdr}: one text line {@code keyVersion;salt;nonce}, with the
- *       key version in decimal and the salt and nonce in Base64.</li>
- * </ul>
+ * The leader's folder of sealed chunks, selados/. Each chunk is stored as two files:
+ *
+ *   - <chunkId>.bin: the ciphertext (GCM tag included), so the file name is
+ *     the SHA-256 of the file content;
+ *   - <chunkId>.hdr: one text line keyVersion;salt;nonce, with the
+ *     key version in decimal and the salt and nonce in Base64.
+ *
  * Both files contain only what a replica will be allowed to see: no plaintext, no LSNs.
  */
 final class SealedStore {
@@ -38,7 +38,7 @@ final class SealedStore {
     }
 
     /**
-     * Removes temporary files left by a crash in the middle of {@link #write}: those
+     * Removes temporary files left by a crash in the middle of write: those
      * chunks were never committed. Only the leader calls this, at startup, because a
      * temporary file may belong to a write that is still in progress.
      */
@@ -63,16 +63,16 @@ final class SealedStore {
     }
 
     /**
-     * Stores a sealed chunk. The header is written first and the {@code .bin} last, so
-     * the presence of the {@code .bin} file is the commit point: after a crash, a chunk
-     * either exists completely or (at most) leaves an orphan {@code .hdr} behind.
+     * Stores a sealed chunk. The header is written first and the .bin last, so
+     * the presence of the .bin file is the commit point: after a crash, a chunk
+     * either exists completely or (at most) leaves an orphan .hdr behind.
      */
     void write(ChunkCrypto.Sealed sealed) throws IOException {
         DurableFiles.writeAtomically(hdrPath(sealed.id), headerLine(sealed).getBytes(StandardCharsets.US_ASCII));
         DurableFiles.writeAtomically(binPath(sealed.id), sealed.ciphertext);
     }
 
-    /** Reads a chunk back from its {@code .bin} and {@code .hdr} files (without decrypting it). */
+    /** Reads a chunk back from its .bin and .hdr files (without decrypting it). */
     ChunkCrypto.Sealed read(String chunkId) throws IOException {
         byte[] ciphertext = Files.readAllBytes(binPath(chunkId));
         String header = Files.readString(hdrPath(chunkId), StandardCharsets.US_ASCII).trim();
@@ -90,7 +90,7 @@ final class SealedStore {
         }
     }
 
-    /** Ids of all committed chunks (those whose {@code .bin} exists), in file-name order. */
+    /** Ids of all committed chunks (those whose .bin exists), in file-name order. */
     List<String> ids() throws IOException {
         List<String> ids = new ArrayList<>();
         try (DirectoryStream<Path> bins = Files.newDirectoryStream(dir, "*" + BIN)) {
@@ -106,7 +106,7 @@ final class SealedStore {
         return ids;
     }
 
-    /** The {@code .hdr} line: {@code keyVersion;Base64(salt);Base64(nonce)}. */
+    /** The .hdr line: keyVersion;Base64(salt);Base64(nonce). */
     static String headerLine(ChunkCrypto.Sealed sealed) {
         Base64.Encoder b64 = Base64.getEncoder();
         return sealed.keyVersion + ";" + b64.encodeToString(sealed.salt) + ";" + b64.encodeToString(sealed.nonce) + "\n";
